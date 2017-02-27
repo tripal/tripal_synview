@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks to handle installation of this module.
+ *
+ */
+
+/**
+ * Implements hook_schema().
+ * create the synblock to store block information.
+ *  
+ * test00001 609069 609071 100 1e10 
+ *  
+ * CSPI01G00010 Cucsa.010570 0.01
+ * CSPI01G00020 Cucsa.010580 0.01
+ * CSPI01G00030 NA NA
+ * CSPI01G00040 NA NA
+ * NA Cucsa.010590 NA
+ * NA Cucsa.010600 NA
+ * CSPI01G00050 Cucsa.010610 0.01
+ */
+function synview_schema() {
+
+  // table for store synteny file
+  $schema['synfile'] = array(
+    'description' => t('The table for synteny file'),
+    'fields' => array(
+      'nid' => array(
+        'description' => t('The primary identifier for a node.'),
+        'type' => 'serial',
+        'unsigned' => true,
+        'not null' => true,
+      ),
+      'synname' => array(
+        'description' => t('The human-readable name of synteny file.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => true,
+      ),
+      'genome1' => array(
+        'description' => t('The organism id for genome 1.'),
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => true,
+      ),
+      'genome2' => array(
+        'description' => t('The organism id for genome 2.'),
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => true,
+      ),
+      'synpath' => array(
+        'description' => t('score of block'),
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => true,
+      ),
+      'install' => array(
+        'description' => t('evalue of block'),
+        'type' => 'blob',
+        'not null' => true,
+      ),
+    ),
+
+    'indexes' => array(
+      'name' => array('synname'),
+    ),
+
+    'primary key' => array('nid'),
+
+    'unique keys' => array(
+      'nid' => array('nid'),
+    ),
+  );
+
+  // table for store block information
+  $schema['synblock'] = array(
+    'description' => t('The block table for synview'),
+    'fields' => array(
+      'blockid' => array(
+        'description' => t('The primary identifier for a block.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => true,
+      ),
+      'b1' => array(
+        'description' => t('The block feature id for org1.'),
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => true,
+      ),
+      'b2' => array(
+        'description' => t('The block feature id for org2.'),
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => true,
+      ),
+      'score' => array(
+        'description' => t('score of block'),
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => true,
+      ),
+      'evalue' => array(
+        'description' => t('evalue of block'),
+        'type' => 'varchar',
+        'length' => '20',
+        'not null' => true,
+      ),
+      'value' => array(
+        'description' => t('the other info of each block'),
+        'type' => 'text',
+        'not null' => true,
+      ),
+    ),
+
+    'indexes' => array(
+      'name' => array('blockid'),
+    ),
+
+    'primary key' => array('blockid'),
+
+    'unique keys' => array(
+      'nid' => array('blockid'),
+    ),
+  );
+
+  return $schema;
+}
+

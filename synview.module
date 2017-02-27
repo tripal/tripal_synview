@@ -1,0 +1,248 @@
+<?php
+
+/**
+ * @file
+ * The main file for the tripal go module.
+ */
+
+// Application Programmers Interface
+require_once 'api/synview.api.inc';
+
+// insert/delete synteny blocks according to synteny file 
+require_once 'includes/synview.syn_parser.inc';
+
+// synteny Node functionality
+require_once 'includes/synview.node.inc';
+
+// Functions specific to themeing (ie: preprocess)
+require_once 'theme/synview.theme.inc';
+
+// Administration for furture
+//require_once 'includes/synview.admin.inc';
+
+/**
+ * Implements hook_menu().
+ */
+function synview_menu() {
+  // search syntenic block form
+  $items['synview/search'] = array(
+    'title' => 'Search Syntenic Blocks',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('synview_search_form'),
+    'access arguments' => array('access content'),
+    'file' => 'includes/synview_search_form.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // display search result
+  $items['synview/search/result'] = array(
+    'title' => 'Search Result for Syntenic Blocks',
+    'page callback' => 'synview_search_result',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  // synteny (MCScanX) dataset Node 
+  $items['node__syn'] = array(
+    'template' => 'node--syn',
+    'render element' => 'node',
+    'base hook' => 'node',
+    'path' => 'themesyn',
+  );
+
+  // Display Syntenic Block
+  $items['synview/block/%'] = array(
+    'title' => 'Display Syntenic Blocks',
+    'page callback' => 'display_block',
+    'page arguments' => array(2),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  // help
+  $items['admin/tripal/extension/tripal_synview/help'] = array(
+    'title' => 'Help',
+    'page callback' => 'theme',
+    'page arguments' => array('synview_help'),
+    'access arguments' => array('administer tripal'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function synview_theme() {
+
+  $items = array();
+  $path = drupal_get_path('module', 'synview');
+
+  // explain the detail
+  // this hook create a array of theme through array item
+  // the key in array is like show_goenrich_report
+  // the value tell drupal where to find template page 
+  //   template: template name, and file must has suffix .tpl.php 
+  //   path: where to find template file 
+  // use theme('key') to call the them
+
+  // search result
+  $items['synview_search_result'] = array(
+    'template' => 'synview_search_result',
+    'path' => "$path/theme",
+  );
+
+
+  // Displays the pwy enrich results for each job
+  $items['display_block'] = array(
+    'template' => 'display_block',
+    'path' => "$path/theme",
+  );
+
+  // Module Help
+  $items['synview_help'] = array(
+    'template' => 'synview_help',
+    'path' => "$path/theme",
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_help().
+ */
+function synview_help($path, $arg) {
+  if ($path == 'admin/help#synview') {
+    return theme('synview_help');
+  }
+}
+
+/**
+ * Dispaly single block 
+ *
+ * @param $block_id
+ *
+ * @return $result
+ *  Return HTML output of the block to be displayed to the user
+ *
+ */
+function display_block($block_id) {
+  return theme('display_block', array('block_id' => $block_id));
+}
+
+/**
+ * retrieve blocks from drupal database according to location
+ * 
+ * @param org_id chr start end array_of_ref_org_id
+ * 
+ * @return $block
+ *         array of searched blocks
+ */
+function synview_search_result() {
+
+  if (!array_key_exists('tripal_synview_search', $_SESSION)) {
+    drupal_goto('synview/search');
+  }
+
+  $org_id  = $_SESSION['tripal_synview_search']['SELECT_GENOME'];
+  $chr     = $_SESSION['tripal_synview_search']['SELECT_CHR'];
+  $start   = $_SESSION['tripal_synview_search']['START'];
+  $end     = $_SESSION['tripal_synview_search']['END'];
+  $ref_org = $_SESSION['tripal_synview_search']['REFORG'];
+
+  // search block on one organism of select chrosome
+  // only find block between start and end, will change this selection later to 
+  // find the overlapped region
+  $args = array( 
+    ':type_name' => 'syntenic_region',
+    ':org_id' => $org_id, 
+    ':chr' => $chr
+  );
+
+  $where_location = ''; 
+  if ($start and $end) {
+    $where_location = "AND FL.fmin > :start AND FL.fmax < :end";
+    $args[':start'] = $start;
+    $args[':end'] = $end;
+  } 
+  elseif ($start) {
+    $where_location = "AND FL.fmin > :start"; 
+    $args[':start'] = $start;
+  } 
+  elseif ($end) {
+    $where_location = "AND FL.fmax < :end";
+    $args[':end'] = $end;
+  }
+  else {
+    $where_location = '';
+  }
+
+  $sql = "SELECT F.feature_id, F.name FROM chado.feature F
+     LEFT JOIN chado.cvterm CVT ON F.type_id = CVT.cvterm_id 
+     LEFT JOIN chado.featureloc FL ON F.feature_id = FL.feature_id 
+     WHERE
+       CVT.name = :type_name AND F.organism_id = :org_id AND FL.srcfeature_id = :chr
+       $where_location
+     ";
+  $results = chado_query( $sql, $args);
+
+  // filter the result by $ref_org
+  // only the blocks in match ref_org will be exported
+  $blocks = array();
+  // the array syn_region used for store region information
+  $syn_region = array(); 
+
+  $sql = "SELECT S.blockid, S.b1, F.organism_id as org1, S.b2, T.organism_id as org2, S.score, S.evalue FROM synblock S
+     LEFT JOIN chado.feature F ON S.b1 = F.feature_id
+     LEFT JOIN chado.feature T ON S.b2 = T.feature_id 
+     WHERE S.b1=:bid OR S.b2=:bid";
+
+  foreach ($results as $r) {
+    $args = array(':bid' => $r->feature_id);
+    $res = chado_query($sql, $args);
+    foreach ($res as $b) {
+      if ( array_key_exists($b->org1, $ref_org) or array_key_exists($b->org2, $ref_org)) {
+        
+        //$b1 = chado_generate_var('feature', array('feature_id'=>$b->b1));
+        //$b1 = chado_expand_var($b1, 'table', 'featureloc');
+        //$b2 = chado_generate_var('feature', array('feature_id'=>$b->b2));
+        //$b2 = chado_expand_var($b2, 'table', 'featureloc');
+        //$b->b1 = $b1;
+        //$b->b2 = $b2;
+        $blocks[] = $b;
+      }
+    }
+  }
+ 
+  if (count($blocks) > 1 || count($blocks) == 0) {
+    return theme('synview_search_result', array('blocks' => $blocks));
+  }
+  else {
+    //return theme('synview_search_result', array('blocks' => $blocks)); 
+    $block_id = $blocks[0]->blockid;
+    drupal_goto("synview/block/$block_id");
+  } 
+}
+
+/**
+ * load synteny blocks of synteny file into chado database
+ * 
+ * @param $node
+ * 
+ * generate job args, then trigger a tripal job for parsing synteny file and loading blocks
+ */
+function synteny_file_load_job($node) 
+{
+  global $user;
+  if ($node->syn_name) {
+    $job_args = array(
+      $node->syn_org1,
+      $node->syn_org2,
+      $node->syn_path,
+    );
+    tripal_add_job("Parse synteny file: $node->syn_path", 'tripal_synview',
+      'synview_parse_synfile', $job_args, $user->uid);
+  }
+}
+
