@@ -6,8 +6,6 @@
  * Plug-in to the synview 
  */
 
-
-
 /**
  * retrieve organism from database 
  * 
