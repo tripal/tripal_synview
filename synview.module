@@ -151,6 +151,8 @@ function synview_search_result() {
   $end     = $_SESSION['tripal_synview_search']['END'];
   $ref_org = $_SESSION['tripal_synview_search']['REFORG'];
 
+  $org_opts = get_organism_options();
+
   // search block on one organism of select chrosome
   // only find block between start and end, will change this selection later to 
   // find the overlapped region
@@ -160,25 +162,15 @@ function synview_search_result() {
     ':chr' => $chr
   );
 
-  $where_location = ''; 
-  if ($start and $end) {
-    $where_location = "AND FL.fmin > :start AND FL.fmax < :end";
-    $args[':start'] = $start;
-    $args[':end'] = $end;
-  } 
-  elseif ($start) {
-    $where_location = "AND FL.fmin > :start"; 
-    $args[':start'] = $start;
-  } 
-  elseif ($end) {
-    $where_location = "AND FL.fmax < :end";
-    $args[':end'] = $end;
-  }
-  else {
-    $where_location = '';
-  }
+  $where_location = "AND 
+    ((FL.fmin < :start AND FL.fmax > :start) OR 
+     (FL.fmin < :end AND FL.fmax > :end) OR 
+     (FL.fmin > :start AND FL.fmax < :end)
+    )";
+  $args[':start'] = $start;
+  $args[':end'] = $end;
 
-  $sql = "SELECT F.feature_id, F.name FROM chado.feature F
+  $sql = "SELECT F.feature_id, F.name, FL.srcfeature_id, FL.fmin, FL.fmax, FL.strand FROM chado.feature F
      LEFT JOIN chado.cvterm CVT ON F.type_id = CVT.cvterm_id 
      LEFT JOIN chado.featureloc FL ON F.feature_id = FL.feature_id 
      WHERE
@@ -198,18 +190,44 @@ function synview_search_result() {
      LEFT JOIN chado.feature T ON S.b2 = T.feature_id 
      WHERE S.b1=:bid OR S.b2=:bid";
 
+  $sql_loc = "SELECT FL.srcfeature_id, FL.feature_id, FL.fmin, FL.fmax, FL.strand FROM chado.featureloc FL
+    WHERE FL.feature_id = :feature_id";
+
   foreach ($results as $r) {
     $args = array(':bid' => $r->feature_id);
     $res = chado_query($sql, $args);
     foreach ($res as $b) {
-      if ( array_key_exists($b->org1, $ref_org) or array_key_exists($b->org2, $ref_org)) {
-        
-        //$b1 = chado_generate_var('feature', array('feature_id'=>$b->b1));
-        //$b1 = chado_expand_var($b1, 'table', 'featureloc');
-        //$b2 = chado_generate_var('feature', array('feature_id'=>$b->b2));
-        //$b2 = chado_expand_var($b2, 'table', 'featureloc');
-        //$b->b1 = $b1;
-        //$b->b2 = $b2;
+      // filter the reference organism
+      if ( (array_key_exists($b->org1, $ref_org) and $b->org2 == $org_id) or 
+           (array_key_exists($b->org2, $ref_org) and $b->org1 == $org_id) ) {
+        if ($b->b1 == $r->feature_id) {
+          $b->b1_org    = $org_opts[$b->org1];
+          $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$r->srcfeature_id];
+          $b->b1_fmin   = $r->fmin;
+          $b->b1_fmax   = $r->fmax;
+          $b->b1_strand = $r->strand;
+
+          $loc2 = chado_query($sql_loc, array(':feature_id'=>$b->b2))->fetchObject();
+          $b->b2_org    = $org_opts[$b->org2];
+          $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$loc2->srcfeature_id];
+          $b->b2_fmin   = $loc2->fmin;
+          $b->b2_fmax   = $loc2->fmax;
+          $b->b2_strand = $loc2->strand;
+        }
+        else {
+          $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
+          $b->b1_org    = $org_opts[$b->org1];
+          $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
+          $b->b1_fmin   = $loc1->fmin;
+          $b->b1_fmax   = $loc1->fmax;
+          $b->b1_strand = $loc1->strand;
+
+          $b->b2_org    = $org_opts[$b->org2];
+          $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$r->srcfeature_id];
+          $b->b2_fmin   = $r->fmin;
+          $b->b2_fmax   = $r->fmax;
+          $b->b2_strand = $r->strand;
+        }
         $blocks[] = $b;
       }
     }

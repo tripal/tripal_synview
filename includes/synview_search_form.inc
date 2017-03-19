@@ -13,6 +13,7 @@ function synview_search_form($form, $form_state) {
   // search block by genome, chr, start, end 
   $first_opt = array('SELECT_G' => 'Select a genome');
   $org_opts = get_organism_options();
+
   $form['#org_opts']  = $org_opts; // pass org array through from
   $org_opts = $first_opt + $org_opts;
 
@@ -144,6 +145,28 @@ function synview_search_form_validate($form, &$form_state) {
     if ($end and !preg_match('/^\d+$/', $end)) {
       form_set_error('END', 'Please enter a positive numeric value for the end');
     }
+  
+    if ($start and $end) { 
+      if ($end - $start + 1 > 1000000) {
+        form_set_error('START', 'Please reduce the searching range to 1M bp');
+        form_set_error('END', 'Please reduce the searching range to 1M bp');
+      }
+    } 
+    elseif ($start) {
+      $end = $start + 1000000 - 1;
+      $form_state['values']['END'] = $end;
+    }
+    elseif ($end) {
+      $start = $end - 1000000 + 1;
+      if ($start < 1) {
+        $start = 1;
+      }
+      $form_state['values']['START'] = $start;
+    } 
+    else {
+      form_set_error('START', 'Please enter a positive numeric value for the start');
+      form_set_error('END', 'Please enter a positive numeric value for the end');
+    }
 
     $ref_org = array();
     foreach ($form['#org_opts'] as $org_id => $org_name) {
@@ -217,20 +240,25 @@ function ajax_synview_location_callback($form, $form_state) {
 
   $genome_sel = $form_state['values']['SELECT_GENOME'];
 
-  $syn_region = chado_select_record('feature', array('feature_id'), array('organism_id'=>$genome_sel, 'type_id'=>array('name' => 'syntenic_region')));
+  $result = chado_select_record('cvterm', array('cvterm_id'), array('name' => 'syntenic_region'));
+  $type_id = $result[0]->cvterm_id;
 
-  $sql = "SELECT F.feature_id, F.uniquename FROM chado.feature F
-     LEFT JOIN chado.featureloc FL ON F.feature_id = FL.srcfeature_id
-     WHERE
-       FL.feature_id = :feature_id";
+  $sql = "SELECT R.feature_id, R.uniquename FROM chado.feature R
+    LEFT JOIN chado.featureloc FL ON R.feature_id = FL.srcfeature_id
+    LEFT JOIN chado.feature F ON FL.feature_id = F.feature_id
+    WHERE F.type_id = :type_id AND F.organism_id = :organism_id
+    ORDER BY R.feature_id ASC";
 
+  $ref_name = array();
   $chr_opts = $form['LOCATION']['SELECT_CHR']['#options'];
-  foreach ($syn_region as $syn) {
-    $result = chado_query($sql, array(':feature_id'=>$syn->feature_id));
-    foreach ($result as $r) {
-      $chr_opts[$r->feature_id] = $r->uniquename;
-    }
+  $result = chado_query($sql, array(':type_id'=>$type_id, ':organism_id'=>$genome_sel));
+  foreach ($result as $r) {
+    $chr_opts[$r->feature_id] = $r->uniquename;
+    $ref_name[$r->feature_id] = $r->uniquename;
   }
+
+  // save the reference name array to session
+  $_SESSION['tripal_synview_search']['REF'][$genome_sel] = $ref_name;
 
   $form['LOCATION']['SELECT_CHR']['#options'] = $chr_opts;
   $form['LOCATION']['SELECT_CHR']['#validated'] = TRUE;

@@ -83,8 +83,8 @@ if ($block_info) {
     'empty' => '',
   );
 
-  print theme('table', $table);
-
+  $table_html = theme('table', $table);
+  print '<div class="row"> <div class="col-md-8 col-md-offset-2">' . $table_html . '</div> </div>';
 
   // display gene pairs in block
   $rows = array();
@@ -93,16 +93,28 @@ if ($block_info) {
   foreach ($block_info as $m) {
     $id1 = $m[0];
     $id2 = $m[1];
-    $id1_feature = chado_generate_var('feature', array('uniquename'=>$id1));
-    $id2_feature = chado_generate_var('feature', array('uniquename'=>$id2));
     $id1_table = $id1;
     $id2_table = $id2;
+
+    // quick, just 500ms to display, must set /feature/gene/ to dispaly gene feature, not universal
+    if ($id1 != 'NA') {
+      $id1_table = l($id1, "/feature/gene/" . $id1, array('html' => TRUE));
+    }
+    if ($id2 != 'NA') {
+      $id2_table = l($id2, "/feature/gene/" . $id2, array('html' => TRUE));
+    }
+
+    /**
+     * very very slow
+    $id1_feature = chado_generate_var('feature', array('uniquename'=>$id1));
+    $id2_feature = chado_generate_var('feature', array('uniquename'=>$id2));
     if ($id1 != 'NA' and property_exists($id1_feature, 'nid')) {
       $id1_table = l($id1, "node/" . $id1_feature->nid, array('html' => TRUE));
     }
     if ($id2 != 'NA' and property_exists($id2_feature, 'nid')) {
       $id2_table = l($id2, "node/" . $id2_feature->nid, array('attributes' => array('target' => "_blank")));
     }
+    */
 
     $rows[] = array(
       array('data'=> $id1_table, 'width' => '30%'),
@@ -124,7 +136,8 @@ if ($block_info) {
     'empty' => '',
   );
 
-  print theme('table', $table);
+  $table_html = theme('table', $table);
+  print '<div class="row"> <div class="col-md-8 col-md-offset-2">' . $table_html . '</div> </div>';
 }
 
 ?>

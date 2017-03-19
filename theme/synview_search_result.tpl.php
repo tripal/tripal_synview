@@ -14,25 +14,9 @@ else {
   foreach ($blocks as $b) {
     $block_id = $b->blockid;
     $block_id = l($block_id, "synview/block/". $block_id, array('attributes' => array('target' => "_blank")));
-  
-    //$organism1 = '';
-    //$organism2 = '';
+    $organism1 = $b->b1_org . "<br>" . $b->b1_sid . " : ". $b->b1_fmin . " - ".$b->b1_fmax;
+    $organism2 = $b->b2_org . "<br>" . $b->b2_sid . " : ". $b->b2_fmin . " - ".$b->b2_fmax;
 
-    $b1 = chado_generate_var('feature', array('feature_id'=>$b->b1));
-    $b1 = chado_expand_var($b1, 'table', 'featureloc');
-    $b2 = chado_generate_var('feature', array('feature_id'=>$b->b2));
-    $b2 = chado_expand_var($b2, 'table', 'featureloc');
-
-    $organism1 = $b1->organism_id->common_name . "<br>" . 
-      $b1->featureloc->feature_id->srcfeature_id->uniquename . " : ". 
-      $b1->featureloc->feature_id->fmin . " - ".
-      $b1->featureloc->feature_id->fmax;
-
-    $organism2 = $b2->organism_id->common_name . "<br>" . 
-      $b2->featureloc->feature_id->srcfeature_id->uniquename . " : ".   
-      $b2->featureloc->feature_id->fmin . " - ".
-      $b2->featureloc->feature_id->fmax;
- 
     $rows[] = array(
       array('data'=> $block_id, 'width' => '10%'),
       array('data'=> $organism1, 'width' => '20%'),
