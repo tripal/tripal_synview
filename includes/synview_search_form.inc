@@ -28,7 +28,7 @@ function synview_search_form($form, $form_state) {
     '#type' => 'select',
     '#title' => t('Genome:'),
     '#options' => $org_opts,
-    '#default_value' => 'SELECT_G', // put default db for different web
+    '#default_value' => isset($_SESSION['tripal_synview_search']['SELECT_GENOME']) ? $_SESSION['tripal_synview_search']['SELECT_GENOME'] : 'SELECT_G', // put default db for different web
     '#ajax' => array(
       'event' => 'change',
       'callback' => 'ajax_synview_location_callback',
@@ -38,7 +38,16 @@ function synview_search_form($form, $form_state) {
     ),
   );
 
+  // retrieve prev selection from session
   $second_opt = array('SELECT_C' => 'Select a chromosome/scaffold');
+  if (isset($_SESSION['tripal_synview_search']['SELECT_GENOME']) ) {
+    $genome_sel = $_SESSION['tripal_synview_search']['SELECT_GENOME'];
+    if (isset($_SESSION['tripal_synview_search']['REF'][$genome_sel])) {
+      foreach ($_SESSION['tripal_synview_search']['REF'][$genome_sel] as $rid => $rname) {
+        $second_opt[$rid] = $rname;
+      }
+    }
+  }
 
   $form['LOCATION']['SELECT_CHR'] = array(
     '#type' => 'select',
@@ -46,22 +55,15 @@ function synview_search_form($form, $form_state) {
     '#prefix' => '<div id="id-textarea">',
     '#suffix' => '</div>',
     '#options' => $second_opt,
-    '#default_value' => 'SELECT_C', // put default db for different web
+    '#default_value' => isset($_SESSION['tripal_synview_search']['SELECT_CHR']) ? $_SESSION['tripal_synview_search']['SELECT_CHR'] : 'SELECT_C',
     '#validated' => TRUE,
-
-    //'#ajax' => array(
-      //'event' => 'change',
-      // 'callback' => 'ajax_synview_location_callback',
-      //'method'   => 'replace',
-      //'wrapper'  => 'id-textarea',
-      //'effect'   => 'fade',
-      //),
   );
 
   $form['LOCATION']['START'] = array(
     '#type' => 'textfield',
     '#title' => t('Start:'),
     '#maxlength' => 20,
+    '#default_value' => isset($_SESSION['tripal_synview_search']['START']) ? $_SESSION['tripal_synview_search']['START'] : '',
     '#prefix' =>'<div id=xyz>',
   );
 
@@ -69,22 +71,27 @@ function synview_search_form($form, $form_state) {
     '#type' => 'textfield',
     '#title' => t('End:'),
     '#maxlength' => 20,
+    '#default_value' => isset($_SESSION['tripal_synview_search']['END']) ? $_SESSION['tripal_synview_search']['END'] : '',
     '#suffix' =>'</div>',
   );
 
+  $n = 0;
   foreach ($form['#org_opts'] as $org_id => $org_name) {
     $label = "ORG_" . $org_id;
-    if ($org_id == 1) {
+    $n++;
+    if ($n == 1) {
       $form['LOCATION'][$label] = array(
         '#type' => 'checkbox',
         '#title' => $org_name,
-        '#prefix' => '<br><p><b>Please choose one genome at least:</b></p><span style="float: left; display: block; margin: 10px;">',
+        '#default_value' => isset($_SESSION['tripal_synview_search']['REFORG'][$org_id]) ? 1 : 0,
+        '#prefix' => '<br><b>Please choose one genome at least:</b><br><span style="float: left; display: block; margin: 10px;">',
         '#suffix' => '</span>',
       );
     } else {
       $form['LOCATION'][$label] = array(
         '#type' => 'checkbox',
         '#title' => $org_name,
+        '#default_value' => isset($_SESSION['tripal_synview_search']['REFORG'][$org_id]) ? 1 : 0,
         '#prefix' => '<span style="float: left; display: block; margin: 10px;">',
         '#suffix' => '</span>',
       );
@@ -240,25 +247,38 @@ function ajax_synview_location_callback($form, $form_state) {
 
   $genome_sel = $form_state['values']['SELECT_GENOME'];
 
-  $result = chado_select_record('cvterm', array('cvterm_id'), array('name' => 'syntenic_region'));
-  $type_id = $result[0]->cvterm_id;
-
-  $sql = "SELECT R.feature_id, R.uniquename FROM chado.feature R
-    LEFT JOIN chado.featureloc FL ON R.feature_id = FL.srcfeature_id
-    LEFT JOIN chado.feature F ON FL.feature_id = F.feature_id
-    WHERE F.type_id = :type_id AND F.organism_id = :organism_id
-    ORDER BY R.feature_id ASC";
-
   $ref_name = array();
-  $chr_opts = $form['LOCATION']['SELECT_CHR']['#options'];
-  $result = chado_query($sql, array(':type_id'=>$type_id, ':organism_id'=>$genome_sel));
-  foreach ($result as $r) {
-    $chr_opts[$r->feature_id] = $r->uniquename;
-    $ref_name[$r->feature_id] = $r->uniquename;
+  $chr_opts = array('SELECT_G' => 'Select a genome');
+
+  // retrieve reference id and name from session for saving search time
+  if (isset($_SESSION['tripal_synview_search']['REF'][$genome_sel])) {
+    foreach ($_SESSION['tripal_synview_search']['REF'][$genome_sel] as $rid => $rname) {
+      $chr_opts[$rid] = $rname;
+    }
+  }
+  // otherwise, searching database to retrieve reference id and name
+  else {
+    $result = chado_select_record('cvterm', array('cvterm_id'), array('name' => 'syntenic_region'));
+    $type_id = $result[0]->cvterm_id;
+
+    $sql = "SELECT R.feature_id, R.uniquename FROM chado.feature R
+      LEFT JOIN chado.featureloc FL ON R.feature_id = FL.srcfeature_id
+      LEFT JOIN chado.feature F ON FL.feature_id = F.feature_id
+      WHERE F.type_id = :type_id AND F.organism_id = :organism_id
+      ORDER BY R.feature_id ASC";
+
+    $result = chado_query($sql, array(':type_id'=>$type_id, ':organism_id'=>$genome_sel));
+    foreach ($result as $r) {
+      $chr_opts[$r->feature_id] = $r->uniquename;
+      $ref_name[$r->feature_id] = $r->uniquename;
+    }
+
+    // save the reference name array to session
+    $_SESSION['tripal_synview_search']['REF'][$genome_sel] = $ref_name;
   }
 
-  // save the reference name array to session
-  $_SESSION['tripal_synview_search']['REF'][$genome_sel] = $ref_name;
+  // set default value
+  $form['LOCATION']['SELECT_CHR']['#default_value'] = isset($_SESSION['tripal_synview_search']['SELECT_CHR']) ? $_SESSION['tripal_synview_search']['SELECT_CHR'] : 'SELECT_C'; 
 
   $form['LOCATION']['SELECT_CHR']['#options'] = $chr_opts;
   $form['LOCATION']['SELECT_CHR']['#validated'] = TRUE;

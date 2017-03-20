@@ -176,6 +176,7 @@ function synview_search_result() {
      WHERE
        CVT.name = :type_name AND F.organism_id = :org_id AND FL.srcfeature_id = :chr
        $where_location
+     ORDER BY FL.fmin
      ";
   $results = chado_query( $sql, $args);
 
@@ -228,13 +229,92 @@ function synview_search_result() {
           $b->b2_fmax   = $r->fmax;
           $b->b2_strand = $r->strand;
         }
-        $blocks[] = $b;
+        $blocks[$b->blockid] = $b;
       }
     }
   }
  
+  // sort 
+  // dpm($blocks, 'before');
+  // ksort($blocks);
+  // dpm($blocks, 'after');
+
+  // find overlapped blocks and generate clusters
+  // step 1 : generate pairs of blocks that overlapped
+  $paired = array();
+  foreach ($blocks as $ba) {
+    foreach ($blocks as $bb) {
+
+      if ($ba->blockid == $bb->blockid) {
+        continue; // skip the block with same ID
+      }
+
+      // compare all 4 possiable overlapped region
+      if ($ba->org1 == $bb->org1 and $ba->org1 == $org_id and $ba->b1_sid == $bb->b1_sid) {
+        if (($ba->b1_fmin < $bb->b1_fmin and $ba->b1_fmax > $bb->b1_fmin) or 
+            ($ba->b1_fmin < $bb->b1_fmax and $ba->b1_fmax > $bb->b1_fmax)) {
+           $paired[] = array($ba->blockid, $bb->blockid);
+        }
+      }
+
+      if ($ba->org1 == $bb->org2 and $ba->org1 == $org_id and $ba->b1_sid == $bb->b2_sid) {
+        if (($ba->b1_fmin < $bb->b2_fmin and $ba->b1_fmax > $bb->b2_fmin) or
+            ($ba->b1_fmin < $bb->b2_fmax and $ba->b1_fmax > $bb->b2_fmax)) {
+           $paired[] = array($ba->blockid, $bb->blockid);
+        }
+      }
+
+      if ($ba->org2 == $bb->org1 and $ba->org2 == $org_id and $ba->b2_sid == $bb->b1_sid) {
+        if (($ba->b2_fmin < $bb->b1_fmin and $ba->b2_fmax > $bb->b1_fmin) or
+            ($ba->b2_fmin < $bb->b1_fmax and $ba->b2_fmax > $bb->b1_fmax)) {
+           $paired[] = array($ba->blockid, $bb->blockid);
+        }
+      }
+
+      if ($ba->org2 == $bb->org2 and $ba->org2 == $org_id and $ba->b2_sid == $bb->b2_sid) {
+        if (($ba->b2_fmin < $bb->b2_fmin and $ba->b2_fmax > $bb->b2_fmin) or
+            ($ba->b2_fmin < $bb->b2_fmax and $ba->b2_fmax > $bb->b2_fmax)) {
+           $paired[] = array($ba->blockid, $bb->blockid);
+        }
+      }
+    }
+  }
+
+  // step 2 : convert paired array to cluster  
+  $cluster_num = 0;
+  $cluster = array();
+  $cluster[$cluster_num] = array_shift($paired);
+
+  foreach ($paired as $p) {
+    $exit = 0;
+    foreach ($cluster as $key => $value) {
+      if (in_array($p[0], $value) and !in_array($p[1], $value)) {
+        array_push($value, $p[1]);
+        $cluster[$key] = $value;
+        $exit = 1;
+        break;
+      }
+      elseif (!in_array($p[0], $value) and in_array($p[1], $value)) {
+        array_push($value, $p[0]);
+        $exit = 1;
+        break;
+      }
+      elseif (in_array($p[0], $value) and in_array($p[1], $value)) {
+        $exit = 1;
+        break;
+      }
+    }
+
+    if ($exit == 0) { 
+      $cluster_num++;
+      $cluster[$cluster_num] = $p;
+    }
+  }
+
+  dpm($cluster);
+
   if (count($blocks) > 1 || count($blocks) == 0) {
-    return theme('synview_search_result', array('blocks' => $blocks));
+    return theme('synview_search_result', array('cluster'=> $cluster, 'blocks' => $blocks));
   }
   else {
     //return theme('synview_search_result', array('blocks' => $blocks)); 
