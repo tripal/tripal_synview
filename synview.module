@@ -35,9 +35,10 @@ function synview_menu() {
   );
 
   // display search result
-  $items['synview/search/result'] = array(
+  $items['synview/search/result/%'] = array(
     'title' => 'Search Result for Syntenic Blocks',
     'page callback' => 'synview_search_result',
+    'page arguments' => array(2),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
@@ -139,7 +140,7 @@ function display_block($block_id) {
  * @return $block
  *         array of searched blocks
  */
-function synview_search_result() {
+function synview_search_result($action) {
 
   if (!array_key_exists('tripal_synview_search', $_SESSION)) {
     drupal_goto('synview/search');
@@ -150,6 +151,29 @@ function synview_search_result() {
   $start   = $_SESSION['tripal_synview_search']['START'];
   $end     = $_SESSION['tripal_synview_search']['END'];
   $ref_org = $_SESSION['tripal_synview_search']['REFORG'];
+
+  if ($action) {
+    if ($action == 'left') {
+      if ($start > 100000) { 
+        $start = $start - 1000000; 
+      } else {
+        $start = 1;
+      }
+      if ($end > 1000000) {
+        $end = $end - 1000000;
+      }
+    }
+    elseif ($action == 'right') {
+      $start = $start + 1000000;
+      $end = $end + 1000000;
+    }
+    else {
+
+    }
+  }
+
+  $_SESSION['tripal_synview_search']['START'] = $start;
+  $_SESSION['tripal_synview_search']['END'] = $end;
 
   $org_opts = get_organism_options();
 
@@ -323,14 +347,7 @@ function synview_search_result() {
     }
   }
 
-  if (count($blocks) > 1 || count($blocks) == 0) {
-    return theme('synview_search_result', array('cluster'=> $cluster, 'blocks' => $blocks));
-  }
-  else {
-    //return theme('synview_search_result', array('blocks' => $blocks)); 
-    $block_id = $blocks[0]->blockid;
-    drupal_goto("synview/block/$block_id");
-  } 
+  return theme('synview_search_result', array('cluster'=> $cluster, 'blocks' => $blocks));
 }
 
 /**

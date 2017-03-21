@@ -216,7 +216,7 @@ function synview_search_form_submit($form, &$form_state) {
     $_SESSION['tripal_synview_search']['END']           = $form_state['values']['END'];
     $_SESSION['tripal_synview_search']['REFORG']        = $form_state['refORG'];
 
-    drupal_goto("synview/search/result");
+    drupal_goto("synview/search/result/1");
   } 
   elseif ($form_state['byFlag'] == 'id') {
     // if search block id, go to display_block page

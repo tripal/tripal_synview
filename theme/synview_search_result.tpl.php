@@ -1,7 +1,24 @@
 <?php
 
-// output search blocks
-// dpm($blocks, 'blocks');
+
+
+
+
+print '<div class="row"> <div class="col-md-8 col-md-offset-2">';
+
+$org_id  = $_SESSION['tripal_synview_search']['SELECT_GENOME'];
+$chr_id  = $_SESSION['tripal_synview_search']['SELECT_CHR'];
+$chr     = $_SESSION['tripal_synview_search']['REF'][$org_id][$chr_id];
+$start   = $_SESSION['tripal_synview_search']['START'];
+$end     = $_SESSION['tripal_synview_search']['END'];
+$reference = "$chr : $start  -  $end";
+
+$ac_left  = l("<<<", "synview/search/result/left");
+$ac_right = l(">>>", "synview/search/result/right");
+print '<button type="button" class="btn btn-default"> ' . $ac_left . '</button>';
+print "  $reference  ";
+print '<button type="button" class="btn btn-default"> ' . $ac_right. '</button>';
+
 
 if (count($blocks) == 0) {
   ?><p>no block is found!</p><?php
@@ -59,6 +76,9 @@ else {
   print theme_table($table);
 
 }
+
+print '</div></div>';
+
 ?>
 
 
