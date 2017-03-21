@@ -28,6 +28,32 @@ function get_organism_options () {
   return $org_opts;
 }
 
+function get_reference ($org_opts) {
+
+  $result = chado_select_record('cvterm', array('cvterm_id'), array('name' => 'syntenic_region'));
+  $type_id = $result[0]->cvterm_id;
+
+  $sql = "SELECT R.feature_id, R.uniquename FROM chado.feature R
+    LEFT JOIN chado.featureloc FL ON R.feature_id = FL.srcfeature_id
+    LEFT JOIN chado.feature F ON FL.feature_id = F.feature_id
+    WHERE F.type_id = :type_id AND F.organism_id = :organism_id
+    ORDER BY R.feature_id ASC";
+
+  foreach ($org_opts as $genome_sel => $org_name) {
+    if (isset($_SESSION['tripal_synview_search']['REF'][$genome_sel])) {
+      continue;
+    }
+    $result = chado_query($sql, array(':type_id'=>$type_id, ':organism_id'=>$genome_sel));
+    $ref_name = array(); 
+    foreach ($result as $r) {
+      $ref_name[$r->feature_id] = $r->uniquename;
+    }
+    // save the reference name array to session
+    $_SESSION['tripal_synview_search']['REF'][$genome_sel] = $ref_name;
+  }
+}
+
+
 /**
  * Get block info
  *

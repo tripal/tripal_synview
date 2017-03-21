@@ -36,15 +36,14 @@ function synview_preprocess_display_block(&$vars) {
 
   // Add CSS and Javascript files
   $path = drupal_get_path('module', 'synview');
-  drupal_add_js($path . '/theme/js/d3.min.js', array('type'=>'file'));
-  drupal_add_js($path . '/theme/js/bam2xjs/bam2x.circos.js', array('type'=>'file'));
+  //drupal_add_js($path . '/theme/js/d3.min.js', array('type'=>'file'));
+  //drupal_add_js($path . '/theme/js/bam2xjs/bam2x.circos.js', array('type'=>'file'));
 
   // put your data to obj
-  $obj = array(
-      'xyz' => "test"
-  );
-  drupal_add_js($obj, array('type'=>'setting', 'group'=>'JS_LIBRARY'));
-
+  //$obj = array(
+  //    'xyz' => "test"
+  //);
+  //drupal_add_js($obj, array('type'=>'setting', 'group'=>'JS_LIBRARY'));
 
   $insert_js = '
 var canvasSize = 800;
@@ -147,8 +146,8 @@ var labTrack = new C.LabelTrack({"outurl":gene_url,"collection":labCollection,"e
     //$syn_json
   }
   ';
-  drupal_add_js($insert_js, array('type'=>'inline', 'scope'=>'footer','weight' => 50));
-  drupal_add_js($path . '/theme/js/synview.js', array('type'=>'file', 'scope'=>'footer','weight' => 100));
+  //drupal_add_js($insert_js, array('type'=>'inline', 'scope'=>'footer','weight' => 50));
+  //drupal_add_js($path . '/theme/js/synview.js', array('type'=>'file', 'scope'=>'footer','weight' => 100));
 
   $block_id = $vars['block_id'];
   $result = db_query('SELECT b1, b2, value FROM {synblock} WHERE blockid=:block_id ', array(':block_id' => $block_id));

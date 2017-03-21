@@ -69,7 +69,16 @@ function synteny_form($node, &$form_state) {
 
   // generate options for organisms
   $first_opt = array('SELECT_G' => 'Select a genome');
-  $org_opts = get_organism_options();
+
+  $org_select = chado_select_record(
+    'organism',
+    array('organism_id', 'common_name'),
+    array()
+  );
+  foreach ($org_select as $org) {
+    $org_opts[$org->organism_id] = $org->common_name;
+  }
+
   $form['#org_opts']  = $org_opts; // pass org array through from
   $org_opts = $first_opt + $org_opts;
 

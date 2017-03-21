@@ -1,9 +1,5 @@
 <?php
 
-
-
-
-
 print '<div class="row"> <div class="col-md-8 col-md-offset-2">';
 
 $org_id  = $_SESSION['tripal_synview_search']['SELECT_GENOME'];

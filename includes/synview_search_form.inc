@@ -13,6 +13,7 @@ function synview_search_form($form, $form_state) {
   // search block by genome, chr, start, end 
   $first_opt = array('SELECT_G' => 'Select a genome');
   $org_opts = get_organism_options();
+  get_reference($org_opts);
 
   $form['#org_opts']  = $org_opts; // pass org array through from
   $org_opts = $first_opt + $org_opts;

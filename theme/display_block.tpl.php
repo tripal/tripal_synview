@@ -142,8 +142,3 @@ if ($block_info) {
 
 ?>
 
-<input type="button" onclick="zoomIn()" value="zoom in (+)" /> 
-<input type="button" onclick="zoomOut()" value="zoom out (-)" /> 
-<br> 
-<div id="canvas" style="border:0px solid #000" ></div>
-

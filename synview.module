@@ -38,7 +38,7 @@ function synview_menu() {
   $items['synview/search/result/%'] = array(
     'title' => 'Search Result for Syntenic Blocks',
     'page callback' => 'synview_search_result',
-    'page arguments' => array(2),
+    'page arguments' => array(3),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
