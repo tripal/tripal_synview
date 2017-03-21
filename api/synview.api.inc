@@ -12,15 +12,19 @@
  * @return array of organism, key: organism_id value: common_name
  */
 function get_organism_options () {
+
   $org_opts = array();
-  $org_select = chado_select_record(
-     'organism',
-     array('organism_id', 'common_name'),
-     array()
-  );
-  foreach ($org_select as $org) {
-     $org_opts[$org->organism_id] = $org->common_name;
+  $sql = "SELECT S.genome1, O.common_name as name1, S.genome2, R.common_name as name2 FROM synfile S 
+     LEFT JOIN chado.organism O ON O.organism_id = S.genome1
+     LEFT JOIN chado.organism R ON R.organism_id = S.genome2
+     ORDER BY S.genome1 
+  ";
+  $result = chado_query($sql);
+  foreach ($result as $r) {
+    $org_opts[$r->genome1] = $r->name1;
+    $org_opts[$r->genome2] = $r->name2;
   }
+
   return $org_opts;
 }
 

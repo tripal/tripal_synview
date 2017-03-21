@@ -233,11 +233,6 @@ function synview_search_result() {
       }
     }
   }
- 
-  // sort 
-  // dpm($blocks, 'before');
-  // ksort($blocks);
-  // dpm($blocks, 'after');
 
   // find overlapped blocks and generate clusters
   // step 1 : generate pairs of blocks that overlapped
@@ -281,37 +276,52 @@ function synview_search_result() {
   }
 
   // step 2 : convert paired array to cluster  
-  $cluster_num = 0;
   $cluster = array();
-  $cluster[$cluster_num] = array_shift($paired);
+  $cluster_num = 1;
+  $blocks_left = $blocks;
 
-  foreach ($paired as $p) {
-    $exit = 0;
-    foreach ($cluster as $key => $value) {
-      if (in_array($p[0], $value) and !in_array($p[1], $value)) {
-        array_push($value, $p[1]);
-        $cluster[$key] = $value;
-        $exit = 1;
-        break;
+  if (sizeof($paired) > 0) {
+    $first_pair = array_shift($paired);
+    $cluster[$cluster_num] = $first_pair;
+    unset($blocks_left[$first_pair[0]]);
+    unset($blocks_left[$first_pair[1]]);
+    foreach ($paired as $p) {
+      $exit = 0;
+      foreach ($cluster as $key => $value) {
+        if (in_array($p[0], $value) and !in_array($p[1], $value)) {
+          array_push($value, $p[1]);
+          $cluster[$key] = $value;
+          unset($blocks_left[$p[1]]);
+          $exit = 1;
+          break;
+        }
+        elseif (!in_array($p[0], $value) and in_array($p[1], $value)) {
+          array_push($value, $p[0]);
+          unset($blocks_left[$p[0]]);
+          $exit = 1;
+          break;
+        }
+        elseif (in_array($p[0], $value) and in_array($p[1], $value)) {
+          $exit = 1;
+          break;
+        }
       }
-      elseif (!in_array($p[0], $value) and in_array($p[1], $value)) {
-        array_push($value, $p[0]);
-        $exit = 1;
-        break;
-      }
-      elseif (in_array($p[0], $value) and in_array($p[1], $value)) {
-        $exit = 1;
-        break;
-      }
-    }
 
-    if ($exit == 0) { 
-      $cluster_num++;
-      $cluster[$cluster_num] = $p;
+      if ($exit == 0) { 
+        $cluster_num++;
+        $cluster[$cluster_num] = $p;
+        unset($blocks_left[$p[0]]);
+        unset($blocks_left[$p[1]]);
+      }
     }
   }
 
-  dpm($cluster);
+  if (sizeof($blocks_left) > 0) {
+    foreach ($blocks_left as $bid => $b) {
+      $cluster_num++;
+      $cluster[$cluster_num] = array($bid);
+    }
+  }
 
   if (count($blocks) > 1 || count($blocks) == 0) {
     return theme('synview_search_result', array('cluster'=> $cluster, 'blocks' => $blocks));

@@ -23,7 +23,7 @@ else {
       $organism1 = $b->b1_org . "<br>" . $b->b1_sid . " : ". $b->b1_fmin . " - ".$b->b1_fmax;
       $organism2 = $b->b2_org . "<br>" . $b->b2_sid . " : ". $b->b2_fmin . " - ".$b->b2_fmax;
  
-      if ($n % 2 == 0) {
+      if ($n % 2 == 1) {
         $rows[] = array(
           array('data'=> $block_id,  'width' => '10%', 'bgcolor' => $color),
           array('data'=> $organism1, 'width' => '20%', 'bgcolor' => $color),
