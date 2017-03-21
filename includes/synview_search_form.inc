@@ -139,11 +139,19 @@ function synview_search_form_validate($form, &$form_state) {
     $start  = $form_state['values']['START'];
     $end    = $form_state['values']['END'];
 
-    if (empty($form_state['values']['SELECT_GENOME']) || $form_state['values']['SELECT_GENOME'] == 'SELECT_G') {
+    if (empty($org_id)) {
+      form_set_error('SELECT_GENOME', t('No genome selected. Choose a genome from the list.'));
+    }
+
+    if (!empty($org_id) and $org_id == 'SELECT_G') {
       form_set_error('SELECT_GENOME', t('No genome selected. Choose a genome from the list.'));
     }
 
     if (empty($chr)) {
+      form_set_error('SELECT_CHR', t('No chromosome selected. Choose a chromosome from the list.'));
+    }
+
+    if (!empty($chr) and $chr == 'SELECT_C') {
       form_set_error('SELECT_CHR', t('No chromosome selected. Choose a chromosome from the list.'));
     }
 
@@ -174,6 +182,16 @@ function synview_search_form_validate($form, &$form_state) {
     else {
       form_set_error('START', 'Please enter a positive numeric value for the start');
       form_set_error('END', 'Please enter a positive numeric value for the end');
+    }
+
+    // check the end using reference length
+    if ($org_id and $chr and $end) {
+      if (isset($_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr]) and 
+          $end > $_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr]) {
+        $end_pos = $_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr];
+        $end_pos = "1 - $end_pos";
+        form_set_error('END', 'The end position goes beyound the refernece ' . $end_pos);
+      }
     }
 
     $ref_org = array();
@@ -248,8 +266,12 @@ function ajax_synview_location_callback($form, $form_state) {
 
   $genome_sel = $form_state['values']['SELECT_GENOME'];
 
+  if ($genome_sel == 'SELECT_G') {
+    return;
+  }
+
   $ref_name = array();
-  $chr_opts = array('SELECT_G' => 'Select a genome');
+  $chr_opts = array('SELECT_C' => 'Select a chromosome/scaffold');
 
   // retrieve reference id and name from session for saving search time
   if (isset($_SESSION['tripal_synview_search']['REF'][$genome_sel])) {

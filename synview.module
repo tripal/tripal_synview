@@ -151,6 +151,7 @@ function synview_search_result($action) {
   $start   = $_SESSION['tripal_synview_search']['START'];
   $end     = $_SESSION['tripal_synview_search']['END'];
   $ref_org = $_SESSION['tripal_synview_search']['REFORG'];
+  $end_pos = $_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr];
 
   if ($action) {
     if ($action == 'left') {
@@ -164,8 +165,15 @@ function synview_search_result($action) {
       }
     }
     elseif ($action == 'right') {
-      $start = $start + 1000000;
-      $end = $end + 1000000;
+      if ($end < $end_pos - 1000000) {
+        $end = $end + 1000000;
+      } else {
+        $end = $end_pos;
+      }
+      
+      if ($start < $end - 1000000) {
+        $start = $start + 1000000;
+      }
     }
     else {
 
