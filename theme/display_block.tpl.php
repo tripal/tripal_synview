@@ -91,10 +91,16 @@ if ($block_info) {
   $headers = array('Gene A' , 'Gene B', 'e-value');
 
   foreach ($block_info as $m) {
+    $color = '';
     $id1 = $m[0];
     $id2 = $m[1];
     $id1_table = $id1;
     $id2_table = $id2;
+ 
+    if ($_SESSION['tripal_synview_search']['highlight'] == $id1 or 
+        $_SESSION['tripal_synview_search']['highlight'] == $id2) {
+      $color = '#ffa5a5';
+    }
 
     // quick, just 500ms to display, must set /feature/gene/ to dispaly gene feature, not universal
     if ($id1 != 'NA') {
@@ -117,9 +123,9 @@ if ($block_info) {
     */
 
     $rows[] = array(
-      array('data'=> $id1_table, 'width' => '30%'),
-      array('data'=> $id2_table, 'width' => '30%'),
-      array('data'=> $m[2], 'width' => '15%'),
+      array('data'=> $id1_table, 'width' => '30%', 'bgcolor' => $color),
+      array('data'=> $id2_table, 'width' => '30%', 'bgcolor' => $color),
+      array('data'=> $m[2], 'width' => '15%', 'bgcolor' => $color),
     );
   }
 

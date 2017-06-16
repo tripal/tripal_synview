@@ -1,4 +1,31 @@
 
+# delete database (just for tripal)
+syntenic_region 2348
+
+## delect syntenic blocks from feature table 
+select count("feature_id") from feature where type_id = 2348
+Delete FROM "chado"."feature" WHERE "type_id" = '2348'
+
+* the block location and block relationship will be deleted automatically
+* the gene-block-relationship (member_of) will be deleted automatically
+
+## delete gene-gene relationship
+paralogous_to : 166
+orthologous_to : 164
+
+SELECT count("feature_relationship_id") FROM "chado"."feature_relationship" WHERE "type_id" = '164'
+SELECT count("feature_relationship_id") FROM "chado"."feature_relationship" WHERE "type_id" = '166'
+
+164: 11552
+166: 300829
+
+DELETE FROM "chado"."feature_relationship" WHERE "type_id" = '164'
+DELETE FROM "chado"."feature_relationship" WHERE "type_id" = '166'
+
+## delete all from synblock table in public 
+empty function of phppgadmin
+
+
 # dataset design 
 
 X1: find RO for synteny homologous, find RO for gene and it’s blockID 

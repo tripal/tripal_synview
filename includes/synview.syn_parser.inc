@@ -56,9 +56,9 @@ function synview_parse_synfile($syn_org1, $syn_org2, $syn_path) {
   $syn_data = synview_check_synfile($syn_org1, $syn_org2, $syn_path, $terms);
 
   // determine paralog or otholog
-  $rel_type = $terms['paralogous_to'];
+  $rel_type = $terms['orthologous_to'];
   if ($syn_org1 == $syn_org2 ) {
-    $rel_type = $terms['orthologous_to'];
+    $rel_type = $terms['paralogous_to'];
   }
 
   // load block to chado database
@@ -164,6 +164,7 @@ function synview_parse_synfile($syn_org1, $syn_org2, $syn_path) {
           if (strcmp($gene1[$i][0],'NA') != 0 and strcmp($gene2[$i][0],'NA') != 0 ) {
             $key = $gene1[$i][0] . "#" . $gene2[$i][0];
             if (!array_key_exists($key, $uniq_gene_pair)) {
+
               $value_grel = array(
                 'subject_id' => $gene1[$i][1],
                 'object_id'  => $gene2[$i][1],
@@ -171,7 +172,10 @@ function synview_parse_synfile($syn_org1, $syn_org2, $syn_path) {
               );
               $grel = (object) chado_insert_record('feature_relationship', $value_grel);
               if (!$grel) {
+                //$umatch = array('feature_relationship_id' => '');
+                //$result = chado_update_record('feature_relationship',$umatch,$value_grel);
                 tripal_report_error("tripal_synview", TRIPAL_WARNING, "Failed to insert ':g1' and ':g2' to feature_relationship ", array(':g1' => $gene1[$i][0], ':g2' =>$gene2[$i][0] ));
+                //print "Gene relationship has been exist\n";
                 return 0; 
               }
               $uniq_gene_pair[$key] = 1; 
@@ -188,6 +192,7 @@ function synview_parse_synfile($syn_org1, $syn_org2, $syn_path) {
             $gm1 = (object) chado_insert_record('feature_relationship', $value_m1);
             if (!$gm1) {
               tripal_report_error("tripal_synview", TRIPAL_WARNING, "Failed to insert ':g1' and to feature_relationship ", array(':g1' => $gene1[$i][0]));
+              //print "Gene relationship has been exist\n";
               return 0; 
             }    
           }
@@ -202,6 +207,7 @@ function synview_parse_synfile($syn_org1, $syn_org2, $syn_path) {
             $gm2 = (object) chado_insert_record('feature_relationship', $value_m2);
             if (!$gm2) {
               tripal_report_error("tripal_synview", TRIPAL_WARNING, "Failed to insert ':g2' and to feature_relationship ", array(':g2' => $gene2[$i][0]));
+              //print "Gene relationship has been exist\n";
               return 0; 
             }    
           }
