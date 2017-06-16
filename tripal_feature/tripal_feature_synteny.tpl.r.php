@@ -1,1 +1,0 @@
-../../../themes/icugi/templates/tripal_feature_synteny.tpl.php
