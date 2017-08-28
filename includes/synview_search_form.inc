@@ -20,7 +20,7 @@ function synview_search_form($form, $form_state) {
 
   $form['LOCATION'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Search blocks by location.'),
+    '#title' => t('Search blocks by a given location.'),
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
   );
@@ -85,7 +85,7 @@ function synview_search_form($form, $form_state) {
         '#type' => 'checkbox',
         '#title' => $org_name,
         '#default_value' => isset($_SESSION['tripal_synview_search']['REFORG'][$org_id]) ? 1 : 0,
-        '#prefix' => '<br><b>Please choose one genome at least:</b><br><span style="float: left; display: block; margin: 10px;">',
+        '#prefix' => '<br><b>Choose (a) genome(s) for comparison:</b><br><span style="float: left; display: block; margin: 10px;">',
         '#suffix' => '</span>',
       );
     } else {
@@ -102,7 +102,7 @@ function synview_search_form($form, $form_state) {
   //.........................
   $form['ID'] = array(
     '#type' => 'fieldset',
-    '#title' => t('<b>OR</b> Search block by ID.'),
+    '#title' => t('<b>OR</b> Search a block by its ID.'),
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
   );
