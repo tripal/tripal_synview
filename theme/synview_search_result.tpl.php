@@ -30,7 +30,7 @@ $breadcrumb = '<nav class="nav">' . implode(" > ", $nav) . '</nav><br>';
 print $breadcrumb;
 
 // print info for searching
-print '<p><b>Selected location: </b><br>';
+print '<p><b>Selected genome and location: </b><br>';
 print ' -> Genome: ' . $org_info->common_name . '<br>';
 print ' -> Location: ' . $reference . '<br></p>';
 print '<p><b>Genome(s) for comparison: </b><br>';
