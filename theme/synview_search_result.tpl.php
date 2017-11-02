@@ -1,21 +1,48 @@
 <?php
+//dpm($_SESSION['tripal_synview_search']);
 
-print '<div class="row"> <div class="col-md-8 col-md-offset-2">';
-
+// prepare info for searching syntenic Blocks
 $org_id  = $_SESSION['tripal_synview_search']['SELECT_GENOME'];
 $chr_id  = $_SESSION['tripal_synview_search']['SELECT_CHR'];
 $chr     = $_SESSION['tripal_synview_search']['REF'][$org_id][$chr_id];
 $start   = $_SESSION['tripal_synview_search']['START'];
 $end     = $_SESSION['tripal_synview_search']['END'];
-$reference = "$chr : $start  -  $end";
+
+$ref_orgs = array(); 
+foreach ($_SESSION['tripal_synview_search']['REFORG'] as $oid => $org_common_name) {
+  $ref_orgs[]=l($org_common_name, 'orgamism/' . $oid);
+}
+
+$org_info = chado_generate_var('organism', array('organism_id'=>$org_id));
 
 $ac_left  = l("<<<", "synview/search/result/left");
 $ac_right = l(">>>", "synview/search/result/right");
+$reference = "$chr : $start  -  $end";
+
+print '<div class="row"> <div class="col-md-8 col-md-offset-2">';
+
+// print breadcrumb (go back for another search)
+$nav = array();
+$nav[] = l('Home', '/');
+$nav[] = l('Search Syntenic Blocks', 'synview/search');
+$nav[] = t('Search Result for Syntenic Blocks');
+$breadcrumb = '<nav class="nav">' . implode(" > ", $nav) . '</nav><br>';
+print $breadcrumb;
+
+// print info for searching
+print '<p><b>Selected genome and location: </b><br>';
+print ' -> Genome: ' . $org_info->common_name . '<br>';
+print ' -> Location: ' . $reference . '<br></p>';
+print '<p><b>Genome(s) for comparison: </b><br>';
+print implode(', ', $ref_orgs);
+print '</p><br>';
+
+// print button for moving left and right
 print '<button type="button" class="btn btn-default"> ' . $ac_left . '</button>';
 print "  $reference  ";
 print '<button type="button" class="btn btn-default"> ' . $ac_right. '</button>';
 
-
+// print search result
 if (count($blocks) == 0) {
   ?><p>no block is found!</p><?php
 } 

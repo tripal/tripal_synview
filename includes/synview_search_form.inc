@@ -20,7 +20,7 @@ function synview_search_form($form, $form_state) {
 
   $form['LOCATION'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Search blocks by location.'),
+    '#title' => t('Search blocks by a given location.'),
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
   );
@@ -102,7 +102,7 @@ function synview_search_form($form, $form_state) {
   //.........................
   $form['ID'] = array(
     '#type' => 'fieldset',
-    '#title' => t('<b>OR</b> Search block by ID.'),
+    '#title' => t('<b>OR</b> Search a block by its ID.'),
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
   );
