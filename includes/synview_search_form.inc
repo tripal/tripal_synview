@@ -85,7 +85,7 @@ function synview_search_form($form, $form_state) {
         '#type' => 'checkbox',
         '#title' => $org_name,
         '#default_value' => isset($_SESSION['tripal_synview_search']['REFORG'][$org_id]) ? 1 : 0,
-        '#prefix' => '<br><b>Please choose one genome at least:</b><br><span style="float: left; display: block; margin: 10px;">',
+        '#prefix' => '<br><b>Choose (a) genome(s) for comparison:</b><br><span style="float: left; display: block; margin: 10px;">',
         '#suffix' => '</span>',
       );
     } else {
