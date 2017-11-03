@@ -1,0 +1,21 @@
+
+.bar_a{
+	fill:#FFC100;
+	stroke:#E7AE00
+}
+        
+.bar_b{
+	fill:#000000;
+	stroke:#6B6B6B
+}
+        
+path{
+	fill:grey;
+	opacity:0.5;
+}
+        
+text{
+	dominant-baseline: middle;
+}
+
+

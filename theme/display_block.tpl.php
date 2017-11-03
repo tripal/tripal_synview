@@ -4,6 +4,11 @@
  */
 
 if ($block_info) {
+  // define json data
+  $json_data = '';
+  $related = array();
+
+
   // display basic info of block 
   $rows = array();
   $headers = array();
@@ -87,6 +92,8 @@ if ($block_info) {
   print '<div class="row"> <div class="col-md-8 col-md-offset-2">' . $table_html . '</div> </div>';
 
   // display gene pairs in block
+  $synteny_gene_pairs = array();
+  $rect1 = array(); $rect2 = array();
   $rows = array();
   $headers = array('Gene A' , 'Gene B', 'e-value');
 
@@ -96,7 +103,14 @@ if ($block_info) {
     $id2 = $m[1];
     $id1_table = $id1;
     $id2_table = $id2;
- 
+
+    if ($gene_position[$id1]) {
+		$rect1[$id1] = array('min'=>$gene_position[$id1][0], 'max'=> $gene_position[$id1][1]);
+    }
+    if ($gene_position[$id2]) {
+		$rect2[$id2] = array('min'=>$gene_position[$id2][0], 'max'=> $gene_position[$id2][1]);
+    }
+
     if ($_SESSION['tripal_synview_search']['highlight'] == $id1 or 
         $_SESSION['tripal_synview_search']['highlight'] == $id2) {
       $color = '#ffa5a5';
@@ -110,23 +124,16 @@ if ($block_info) {
       $id2_table = l($id2, "/feature/gene/" . $id2, array('html' => TRUE));
     }
 
-    /**
-     * very very slow
-    $id1_feature = chado_generate_var('feature', array('uniquename'=>$id1));
-    $id2_feature = chado_generate_var('feature', array('uniquename'=>$id2));
-    if ($id1 != 'NA' and property_exists($id1_feature, 'nid')) {
-      $id1_table = l($id1, "node/" . $id1_feature->nid, array('html' => TRUE));
-    }
-    if ($id2 != 'NA' and property_exists($id2_feature, 'nid')) {
-      $id2_table = l($id2, "node/" . $id2_feature->nid, array('attributes' => array('target' => "_blank")));
-    }
-    */
-
     $rows[] = array(
       array('data'=> $id1_table, 'width' => '30%', 'bgcolor' => $color),
       array('data'=> $id2_table, 'width' => '30%', 'bgcolor' => $color),
       array('data'=> $m[2], 'width' => '15%', 'bgcolor' => $color),
     );
+
+    // save synteny gene paris to array for js
+    if ($id1 != 'NA' and $id2 != 'NA') {
+      $synteny_gene_pairs[] = array('A' => $id1, 'B' => $id2);
+    }
   }
 
   $table = array(
@@ -143,7 +150,32 @@ if ($block_info) {
   );
 
   $table_html = theme('table', $table);
-  print '<div class="row"> <div class="col-md-8 col-md-offset-2">' . $table_html . '</div> </div>';
+
+  // === insert block data (json format) ===
+  $genloc_array = array(
+    'A' => array(
+      //$b1->featureloc->feature_id->srcfeature_id->uniquename
+      'min' => $b1->featureloc->feature_id->fmin,
+      'max' => $b1->featureloc->feature_id->fmax,
+      'rect' => $rect1
+    ),
+    'B' => array(
+      'min' => $b2->featureloc->feature_id->fmin,
+      'max' => $b2->featureloc->feature_id->fmax,
+      'rect' => $rect2
+    ),
+  );
+  $genloc_json = json_encode($genloc_array);
+  $synteny_gene_pairs_json = json_encode($synteny_gene_pairs);
+
+  $json_data = "var data = $genloc_json; var relate = $synteny_gene_pairs_json;";
+  drupal_add_js($json_data, array('type'=>'inline', 'scope'=>'footer','weight' => 50));
+ 
+  print '
+<div class="row"> 
+	<div class="col-md-6"> <svg id="svg" width="1000" height="800"></svg> </div>
+	<div class="col-md-6">' . $table_html . '</div> 
+</div>';
 }
 
 ?>
