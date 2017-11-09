@@ -148,10 +148,12 @@ function synview_search_result($action) {
 
   $org_id  = $_SESSION['tripal_synview_search']['SELECT_GENOME'];
   $chr     = $_SESSION['tripal_synview_search']['SELECT_CHR'];
-  $start   = $_SESSION['tripal_synview_search']['START'];
-  $end     = $_SESSION['tripal_synview_search']['END'];
+  //$start   = $_SESSION['tripal_synview_search']['START'];
+  //$end     = $_SESSION['tripal_synview_search']['END'];
   $ref_org = $_SESSION['tripal_synview_search']['REFORG'];
   $end_pos = $_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr];
+
+  dpm($_SESSION['tripal_synview_search']);
 
   if ($action) {
     if ($action == 'left') {
@@ -180,27 +182,26 @@ function synview_search_result($action) {
     }
   }
 
-  $_SESSION['tripal_synview_search']['START'] = $start;
-  $_SESSION['tripal_synview_search']['END'] = $end;
+  //$_SESSION['tripal_synview_search']['START'] = $start;
+  //$_SESSION['tripal_synview_search']['END'] = $end;
 
   $org_opts = get_organism_options();
 
   // search block on one organism of select chrosome
-  // only find block between start and end, will change this selection later to 
-  // find the overlapped region
+  // find block between start and end, also cover start and end, 
   $args = array( 
     ':type_name' => 'syntenic_region',
     ':org_id' => $org_id, 
     ':chr' => $chr
   );
 
-  $where_location = "AND 
-    ((FL.fmin < :start AND FL.fmax > :start) OR 
-     (FL.fmin < :end AND FL.fmax > :end) OR 
-     (FL.fmin > :start AND FL.fmax < :end)
-    )";
-  $args[':start'] = $start;
-  $args[':end'] = $end;
+  $where_location = '';//"AND 
+  //  ((FL.fmin < :start AND FL.fmax > :start) OR 
+  //   (FL.fmin < :end AND FL.fmax > :end) OR 
+  //   (FL.fmin > :start AND FL.fmax < :end)
+  //  )";
+  //$args[':start'] = $start;
+  //$args[':end'] = $end;
 
   $sql = "SELECT F.feature_id, F.name, FL.srcfeature_id, FL.fmin, FL.fmax, FL.strand FROM chado.feature F
      LEFT JOIN chado.cvterm CVT ON F.type_id = CVT.cvterm_id 
@@ -211,6 +212,21 @@ function synview_search_result($action) {
      ORDER BY FL.fmin
      ";
   $results = chado_query( $sql, $args);
+  
+  // get all the feature_id of selected synteny_region 
+  // then retrieve all corresponding synteny_regions in other organisms of these selected synteny_region 
+  $search_feature_id = array();
+  $search_results = array();
+  foreach ($results as $r) { 
+    $search_feature_id[] = $r->feature_id;
+    $search_results[$r->feature_id] = $r;
+  }
+
+  $sql = "SELECT S.blockid, S.b1, F.organism_id as org1, S.b2, T.organism_id as org2, S.score, S.evalue FROM synblock S
+     LEFT JOIN chado.feature F ON S.b1 = F.feature_id
+     LEFT JOIN chado.feature T ON S.b2 = T.feature_id 
+     WHERE S.b1 IN (:bid) OR S.b2 IN (:bid)";
+  $res = chado_query($sql, array(':bid' => $search_feature_id));
 
   // filter the result by $ref_org
   // only the blocks in match ref_org will be exported
@@ -218,24 +234,131 @@ function synview_search_result($action) {
   // the array syn_region used for store region information
   $syn_region = array(); 
 
-  $sql = "SELECT S.blockid, S.b1, F.organism_id as org1, S.b2, T.organism_id as org2, S.score, S.evalue FROM synblock S
-     LEFT JOIN chado.feature F ON S.b1 = F.feature_id
-     LEFT JOIN chado.feature T ON S.b2 = T.feature_id 
-     WHERE S.b1=:bid OR S.b2=:bid";
+  // jdata: array for json data
+  $jdata = array();
 
   $sql_loc = "SELECT FL.srcfeature_id, FL.feature_id, FL.fmin, FL.fmax, FL.strand FROM chado.featureloc FL
     WHERE FL.feature_id = :feature_id";
 
-  foreach ($results as $r) {
-    $args = array(':bid' => $r->feature_id);
-    $res = chado_query($sql, $args);
-    foreach ($res as $b) {
+  foreach ($res as $b) {
       // filter the reference organism
-      if ( (array_key_exists($b->org1, $ref_org) and $b->org2 == $org_id) or 
-           (array_key_exists($b->org2, $ref_org) and $b->org1 == $org_id) ) {
-        if ($b->b1 == $r->feature_id) {
+      // b1 and b2 are selected org
+      if ( $b->org1 == $org_id and $b->org2 == $org_id )
+      {
+          $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
+          $b->b1_org    = $org_opts[$b->org1];
+          $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
+          $b->b1_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$loc2->srcfeature_id];
+          $b->b1_fmin   = $loc1->fmin;
+          $b->b1_fmax   = $loc1->fmax;
+          $b->b1_strand = $loc1->strand;
+
+          $loc2 = chado_query($sql_loc, array(':feature_id'=>$b->b2))->fetchObject();
+          $b->b2_org    = $org_opts[$b->org2];
+          $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$loc2->srcfeature_id];
+          $b->b2_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org2][$loc2->srcfeature_id];
+          $b->b2_fmin   = $loc2->fmin;
+          $b->b2_fmax   = $loc2->fmax;
+          $b->b2_strand = $loc2->strand;
+          $blocks[$b->blockid] = $b;
+
+          // build array for json
+          //**
+          if (!array_key_exists($b->org1, $jdata) ) {
+            $jdata[$b->org1] = array();
+            $jdata[$b->org1]['name'] = $org_opts[$b->org1];
+            $jdata[$b->org1]['chr'] = array();
+          }
+
+          if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['chr']) ) {
+            $jdata[$b->org1]['chr'][$b->b1_sid] = array();
+            $jdata[$b->org1]['chr'][$b->b1_sid]['len'] = $b->b1_len;
+            $jdata[$b->org1]['chr'][$b->b1_sid]['block'] = array();
+          }
+
+          if (!array_key_exists($b->blockid, $jdata[$b->org1]['chr'][$b->b1_sid]['block'])) {
+            $jdata[$b->org1]['chr'][$b->b1_sid]['block'][$b->blockid] = array($b->b1_fmin, $b->b1_fmax);
+          }
+          //**/
+          /**
+          if (!array_key_exists($b->org2, $jdata) ) {
+            $jdata[$b->org2] = array();
+            $jdata[$b->org2]['name'] = $org_opts[$b->org2];
+            $jdata[$b->org2]['chr'] = array();  
+          }
+
+          if (!array_key_exists($b->b2_sid, $jdata[$b->org2]['chr']) ) {
+            $jdata[$b->org2]['chr'][$b->b2_sid] = array();
+            $jdata[$b->org2]['chr'][$b->b2_sid]['len'] = $b->b2_len;
+            $jdata[$b->org2]['chr'][$b->b2_sid]['block'] = array();
+          }
+
+          if (!array_key_exists($b->blockid, $jdata[$b->org2]['chr'][$b->b2_sid]['block'])) {
+            $jdata[$b->org2]['chr'][$b->b2_sid]['block'][$b->blockid] = array($b->b2_fmin, $b->b2_fmax);
+          }
+          **/
+      }
+      // b1 is ref orgs, b2 is select org
+      elseif ( array_key_exists($b->org1, $ref_org) and $b->org2 == $org_id ) 
+      {
+          $r = $search_results[$b->b2];
+          $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
+          $b->b1_org    = $org_opts[$b->org1];
+          $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
+          $b->b1_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$loc1->srcfeature_id];
+          $b->b1_fmin   = $loc1->fmin;
+          $b->b1_fmax   = $loc1->fmax;
+          $b->b1_strand = $loc1->strand;
+
+          $b->b2_org    = $org_opts[$b->org2];
+          $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$r->srcfeature_id];
+          $b->b2_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org2][$r->srcfeature_id];
+          $b->b2_fmin   = $r->fmin;
+          $b->b2_fmax   = $r->fmax;
+          $b->b2_strand = $r->strand;
+          $blocks[$b->blockid] = $b;
+
+          /**
+          if (!array_key_exists($b->org1, $jdata) ) {
+            $jdata[$b->org1] = array();
+            $jdata[$b->org1]['name'] = $org_opts[$b->org1];
+            $jdata[$b->org1]['chr'] = array();
+          }
+
+          if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['chr']) ) {
+            $jdata[$b->org1]['chr'][$b->b1_sid] = array();
+            $jdata[$b->org1]['chr'][$b->b1_sid]['len'] = $b->b1_len;
+            $jdata[$b->org1]['chr'][$b->b1_sid]['block'] = array();
+          }
+
+          if (!array_key_exists($b->blockid, $jdata[$b->org1]['chr'][$b->b1_sid]['block'])) {
+            $jdata[$b->org1]['chr'][$b->b1_sid]['block'][$b->blockid] = array($b->b1_fmin, $b->b1_fmax);
+          }
+          **/
+          /**
+          if (!array_key_exists($b->org2, $jdata) ) {
+            $jdata[$b->org2] = array();
+            $jdata[$b->org2]['name'] = $org_opts[$b->org2];
+            $jdata[$b->org2]['chr'] = array();
+          }
+
+          if (!array_key_exists($b->b2_sid, $jdata[$b->org2]['chr']) ) {
+            $jdata[$b->org2]['chr'][$b->b2_sid] = array();
+            $jdata[$b->org2]['chr'][$b->b2_sid]['len'] = $b->b2_len;
+            $jdata[$b->org2]['chr'][$b->b2_sid]['block'] = array();
+          }
+
+          if (!array_key_exists($b->blockid, $jdata[$b->org2]['chr'][$b->b2_sid]['block'])) {
+            $jdata[$b->org2]['chr'][$b->b2_sid]['block'][$b->blockid] = array($b->b2_fmin, $b->b2_fmax);
+          }
+          **/
+      }
+      elseif ( array_key_exists($b->org2, $ref_org) and $b->org1 == $org_id )
+      {
+          $r = $search_results[$b->b1];
           $b->b1_org    = $org_opts[$b->org1];
           $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$r->srcfeature_id];
+          $b->b1_sid    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$r->srcfeature_id];
           $b->b1_fmin   = $r->fmin;
           $b->b1_fmax   = $r->fmax;
           $b->b1_strand = $r->strand;
@@ -243,28 +366,56 @@ function synview_search_result($action) {
           $loc2 = chado_query($sql_loc, array(':feature_id'=>$b->b2))->fetchObject();
           $b->b2_org    = $org_opts[$b->org2];
           $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$loc2->srcfeature_id];
+          $b->b2_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org2][$loc2->srcfeature_id];
           $b->b2_fmin   = $loc2->fmin;
           $b->b2_fmax   = $loc2->fmax;
           $b->b2_strand = $loc2->strand;
-        }
-        else {
-          $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
-          $b->b1_org    = $org_opts[$b->org1];
-          $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
-          $b->b1_fmin   = $loc1->fmin;
-          $b->b1_fmax   = $loc1->fmax;
-          $b->b1_strand = $loc1->strand;
+          $blocks[$b->blockid] = $b;
 
-          $b->b2_org    = $org_opts[$b->org2];
-          $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$r->srcfeature_id];
-          $b->b2_fmin   = $r->fmin;
-          $b->b2_fmax   = $r->fmax;
-          $b->b2_strand = $r->strand;
-        }
-        $blocks[$b->blockid] = $b;
+          /**
+          if (!array_key_exists($b->org1, $jdata) ) {
+            $jdata[$b->org1] = array();
+            $jdata[$b->org1]['name'] = $org_opts[$b->org1];
+            $jdata[$b->org1]['chr'] = array();
+          }
+
+          if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['chr']) ) {
+            $jdata[$b->org1]['chr'][$b->b1_sid] = array();
+            $jdata[$b->org1]['chr'][$b->b1_sid]['len'] = $b->b1_len;
+            $jdata[$b->org1]['chr'][$b->b1_sid]['block'] = array();
+          }
+
+          if (!array_key_exists($b->blockid, $jdata[$b->org1]['chr'][$b->b1_sid]['block'])) {
+            $jdata[$b->org1]['chr'][$b->b1_sid]['block'][$b->blockid] = array($b->b1_fmin, $b->b1_fmax);
+          }
+          **/
+          /**
+          if (!array_key_exists($b->org2, $jdata) ) {
+            $jdata[$b->org2] = array();
+            $jdata[$b->org2]['name'] = $org_opts[$b->org2];
+            $jdata[$b->org2]['chr'] = array();  
+          }
+
+          if (!array_key_exists($b->b2_sid, $jdata[$b->org2]['chr']) ) {
+            $jdata[$b->org2]['chr'][$b->b2_sid] = array();
+            $jdata[$b->org2]['chr'][$b->b2_sid]['len'] = $b->b2_len;
+            $jdata[$b->org2]['chr'][$b->b2_sid]['block'] = array();
+          }
+
+          if (!array_key_exists($b->blockid, $jdata[$b->org2]['chr'][$b->b2_sid]['block'])) {
+            $jdata[$b->org2]['chr'][$b->b2_sid]['block'][$b->blockid] = array($b->b2_fmin, $b->b2_fmax);
+          }
+          **/
       }
-    }
-  }
+      else 
+      {
+          
+      }
+   }
+
+  //dpm($blocks);
+  dpm($jdata);
+
 
   // find overlapped blocks and generate clusters
   // step 1 : generate pairs of blocks that overlapped

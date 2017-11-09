@@ -13,9 +13,16 @@
 function synview_preprocess_synview_search_result(&$vars) {
   // Add CSS and Javascript files
   $path = drupal_get_path('module', 'synview');
-  //drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js');
-  //drupal_add_js($settings, 'setting');
-  //drupal_add_js($path . '/theme/js/synview.js');
+  // drupal_add_js('https://d3js.org/d3.v4.min.js', 'external');
+  // drupal_add_js('https://d3js.org/d3-selection-multi.v1.min.js', 'external');
+  
+  // https://d3js.org/d3.v3.min.js
+
+  //drupal_add_css($path . '/theme/css/display_block.css', array('type'=>'file'));
+  //drupal_add_js($path . '/theme/js/search_block.js', array('type'=>'file', 'scope'=>'footer','weight' => 100));
+  drupal_add_js('https://d3js.org/d3.v3.min.js', 'external');
+  drupal_add_js($path . '/theme/js/bam2x.circos.js', array('type'=>'file'));
+  drupal_add_js($path . '/theme/js/test.js', array('type'=>'file', 'scope'=>'footer','weight' => 100));
 }
 
 /**

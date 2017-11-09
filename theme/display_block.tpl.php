@@ -155,13 +155,15 @@ if ($block_info) {
   $genloc_array = array(
     'A' => array(
       //$b1->featureloc->feature_id->srcfeature_id->uniquename
-      'min' => $b1->featureloc->feature_id->fmin,
-      'max' => $b1->featureloc->feature_id->fmax,
+      'name' => $b1->featureloc->feature_id->srcfeature_id->uniquename,
+      'min'  => $b1->featureloc->feature_id->fmin,
+      'max'  => $b1->featureloc->feature_id->fmax,
       'rect' => $rect1
     ),
     'B' => array(
-      'min' => $b2->featureloc->feature_id->fmin,
-      'max' => $b2->featureloc->feature_id->fmax,
+      'name' => $b2->featureloc->feature_id->srcfeature_id->uniquename,
+      'min'  => $b2->featureloc->feature_id->fmin,
+      'max'  => $b2->featureloc->feature_id->fmax,
       'rect' => $rect2
     ),
   );

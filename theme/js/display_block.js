@@ -36,6 +36,9 @@
 	// set the svg and other parameters for drawing synteny genes
 	var svg = d3.select("#svg");
 
+	var myZoom = d3.zoom();
+	myZoom(svg);
+
 	var margin = {
 		left:100,
 		right:100,
@@ -44,7 +47,7 @@
 	};
 
 	var chrWidth = 20;
-	var chrHeight = 700;
+	var chrHeight = 600;
 	var spaceBetweenChr = 250;
 	var txtToChr = 5;
 
@@ -58,20 +61,51 @@
         return _d;
     });
 
-	var width= +svg.attr("width") - margin.left - margin.right;
+	var width  = +svg.attr("width") - margin.left - margin.right;
 	var height = +svg.attr("height") - margin.top - margin.bottom;
 
 	let scale_A = d3.scaleLinear().domain([data.A.min, data.A.max]).range([margin.top, margin.top + chrHeight]); // 100,700
 	let scale_B = d3.scaleLinear().domain([data.B.min, data.B.max]).range([margin.top, margin.top + chrHeight]); // 100,700
 
+    var yrange = scale_A.range();
+	myZoom.on("zoom", function(){
+    	var fullsize = yrange[1]-yrange[0];
+    	var newsize = fullsize*d3.event.transform.k;
+    	var offset = newsize/2;
+    	var newrange = [yrange[0]-offset,yrange[1]+offset];
+    	scale_A.range(newrange);
+		scale_B.range(newrange);
+        drawFunction();
+	});
+
 	// draw chr A and B
+
 	svg.append('rect')
 		.attr('x',margin.left)		// 100
 		.attr('y',margin.top)		// 100
 		.attr('width', chrWidth)	// 30
 		.attr('height',chrHeight)	// 600
 		.style('stroke','#D7702A')
-		.style('fill','#ED7C30');
+		.style('fill','#ED7C30')
+		
+	svg.append('text')
+        .classed('textA',true)
+        .attr('x',margin.left + 40)       // 90
+        .attr('y',margin.top - 40)
+        .attr('text-anchor','end')
+        .html(data.A.name);
+	svg.append('text')
+		.classed('textA',true)
+		.attr('x',margin.left + 40)
+		.attr('y',margin.top - 20)
+		.attr('text-anchor','end')
+		.html(data.A.min);
+	svg.append('text')
+        .classed('textA',true)
+        .attr('x',margin.left + 40)
+        .attr('y',margin.top + chrHeight + 20)
+        .attr('text-anchor','end')
+        .html(data.A.max);
 
 	svg.append('rect')
 		.attr('x',margin.left + spaceBetweenChr)	// 500
@@ -81,8 +115,28 @@
 		.style('stroke','#4C84B7')
 		.style('fill','#5A9BD5');
 
-	let subRectG = svg.append('g');
+    svg.append('text')
+        .classed('textB',true)
+        .attr('x',margin.left + 40 + spaceBetweenChr)       // 90
+        .attr('y',margin.top - 40)
+        .attr('text-anchor','end')
+        .html(data.B.name);
+    svg.append('text')
+        .classed('textB',true)
+        .attr('x',margin.left + 40 + spaceBetweenChr)
+        .attr('y',margin.top - 20)
+        .attr('text-anchor','end')
+        .html(data.B.min);
+    svg.append('text')
+        .classed('textB',true)
+        .attr('x',margin.left + 40 + spaceBetweenChr)
+        .attr('y',margin.top + chrHeight + 20)
+        .attr('text-anchor','end')
+        .html(data.B.max);
 
+    let subRectG = svg.append('g');
+
+  var drawFunction = function(){
 	let data_A = data.A.rect;
 	let rect_A = subRectG.selectAll(".bar_a")
 		.data(Object.keys(data_A));
@@ -93,6 +147,7 @@
 		.attr('y',d=>scale_A(data_A[d].min))	// scale  
 		.attr('width',chrWidth)
 		.attr('height',d=>scale_A(data_A[d].max)-scale_A(data_A[d].min));
+	rect_A.exit().remove();
 
 	let textA = subRectG.selectAll('.textA')
 		.data(Object.keys(data_A));
@@ -103,7 +158,7 @@
 		.attr('y',d=>(scale_A(data_A[d].max)+scale_A(data_A[d].min))/2)  
 		.attr('text-anchor','end')
 		.html(d=>"<a href=/feature/gene/" + d + " target=_blank>" + d + "</a>");
-
+	textA.exit().remove();
 
 	let data_B = data.B.rect;
 	let rect_B = subRectG.selectAll(".bar_b")
@@ -115,6 +170,7 @@
 		.attr('y',d=>scale_B(data_B[d].min))		// scale
 		.attr('width',chrWidth)
 		.attr('height',d=>scale_B(data_B[d].max)-scale_B(data_B[d].min));
+	rect_B.exit().remove();
 
 	let textB = subRectG.selectAll('.textB')
 		.data(Object.keys(data_B));
@@ -125,6 +181,7 @@
 		.attr('y',d=>(scale_B(data_B[d].max)+scale_B(data_B[d].min))/2)
 		.attr('text-anchor','start')
 		.html(d=>"<a href=/feature/gene/" + d + " target=_blank>" + d + "</a>");
+	textB.exit().remove();
 
 	// draw path for synteny 
 	let path = d3.path();
@@ -137,5 +194,14 @@
 	}
 
 	path.closePath();
-	subRectG.append('path')
-		.attr('d',path.toString());
+	//subRectG.append('path')
+	//	.attr('d',path.toString());
+
+	var pathelement = subRectG.select('.synPath');
+	if (pathelement.empty()) pathelement = subRectG.append('path').classed('synPath', true);
+	pathelement.attr('d', path.toString());
+  }
+
+  drawFunction();
+
+

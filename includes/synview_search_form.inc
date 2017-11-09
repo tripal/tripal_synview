@@ -60,21 +60,20 @@ function synview_search_form($form, $form_state) {
     '#validated' => TRUE,
   );
 
-  $form['LOCATION']['START'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Start:'),
-    '#maxlength' => 20,
-    '#default_value' => isset($_SESSION['tripal_synview_search']['START']) ? $_SESSION['tripal_synview_search']['START'] : '',
-    '#prefix' =>'<div id=xyz>',
-  );
-
-  $form['LOCATION']['END'] = array(
-    '#type' => 'textfield',
-    '#title' => t('End:'),
-    '#maxlength' => 20,
-    '#default_value' => isset($_SESSION['tripal_synview_search']['END']) ? $_SESSION['tripal_synview_search']['END'] : '',
-    '#suffix' =>'</div>',
-  );
+  //$form['LOCATION']['START'] = array(
+  //  '#type' => 'textfield',
+  //  '#title' => t('Start:'),
+  //  '#maxlength' => 20,
+  //  '#default_value' => isset($_SESSION['tripal_synview_search']['START']) ? $_SESSION['tripal_synview_search']['START'] : '',
+  //  '#prefix' =>'<div id=xyz>',
+  //);
+  //$form['LOCATION']['END'] = array(
+  //  '#type' => 'textfield',
+  //  '#title' => t('End:'),
+  //  '#maxlength' => 20,
+  //  '#default_value' => isset($_SESSION['tripal_synview_search']['END']) ? $_SESSION['tripal_synview_search']['END'] : '',
+  //  '#suffix' =>'</div>',
+  //);
 
   $n = 0;
   foreach ($form['#org_opts'] as $org_id => $org_name) {
@@ -109,7 +108,7 @@ function synview_search_form($form, $form_state) {
 
   $form['ID']['INPUT_ID'] = array(
     '#type' => 'textfield',
-    '#title' => t('Enter a block ID. Example: test00001'),
+    '#title' => t('Enter a block ID. Example: cuwmB537'),
     '#maxlength' => 20,
   );
 
@@ -136,8 +135,8 @@ function synview_search_form_validate($form, &$form_state) {
     // the genome, chr, and ref genome should be required
     $org_id = $form_state['values']['SELECT_GENOME'];
     $chr    = $form_state['values']['SELECT_CHR'];
-    $start  = $form_state['values']['START'];
-    $end    = $form_state['values']['END'];
+    //$start  = $form_state['values']['START'];
+    //$end    = $form_state['values']['END'];
 
     if (empty($org_id)) {
       form_set_error('SELECT_GENOME', t('No genome selected. Choose a genome from the list.'));
@@ -155,34 +154,34 @@ function synview_search_form_validate($form, &$form_state) {
       form_set_error('SELECT_CHR', t('No chromosome selected. Choose a chromosome from the list.'));
     }
 
-    if ($start and !preg_match('/^\d+$/', $start)) {
-      form_set_error('START', 'Please enter a positive numeric value for the start');
-    }
-    if ($end and !preg_match('/^\d+$/', $end)) {
-      form_set_error('END', 'Please enter a positive numeric value for the end');
-    }
+    //if ($start and !preg_match('/^\d+$/', $start)) {
+    //  form_set_error('START', 'Please enter a positive numeric value for the start');
+    //}
+    ///if ($end and !preg_match('/^\d+$/', $end)) {
+    //  form_set_error('END', 'Please enter a positive numeric value for the end');
+    //}
   
-    if ($start and $end) { 
-      if ($end - $start + 1 > 1000000) {
-        form_set_error('START', 'Please reduce the searching range to 1M bp');
-        form_set_error('END', 'Please reduce the searching range to 1M bp');
-      }
-    } 
-    elseif ($start) {
-      $end = $start + 1000000 - 1;
-      $form_state['values']['END'] = $end;
-    }
-    elseif ($end) {
-      $start = $end - 1000000 + 1;
-      if ($start < 1) {
-        $start = 1;
-      }
-      $form_state['values']['START'] = $start;
-    } 
-    else {
-      form_set_error('START', 'Please enter a positive numeric value for the start');
-      form_set_error('END', 'Please enter a positive numeric value for the end');
-    }
+    //if ($start and $end) { 
+    //  if ($end - $start + 1 > 10000000) {
+    //    form_set_error('START', 'Please reduce the searching range to 10M bp');
+    //    form_set_error('END', 'Please reduce the searching range to 10M bp');
+    //  }
+    //} 
+    //elseif ($start) {
+    //  $end = $start + 10000000 - 1;
+    //  $form_state['values']['END'] = $end;
+    //}
+    //elseif ($end) {
+    //  $start = $end - 10000000 + 1;
+    //  if ($start < 1) {
+    //    $start = 1;
+    //  }
+    //  $form_state['values']['START'] = $start;
+    //} 
+    //else {
+    //  form_set_error('START', 'Please enter a positive numeric value for the start');
+    //  form_set_error('END', 'Please enter a positive numeric value for the end');
+    //}
 
     // check the end using reference length
     if ($org_id and $chr and $end) {
@@ -225,14 +224,14 @@ function synview_search_form_submit($form, &$form_state) {
   if ($form_state['byFlag'] == 'location') {
     $org_id = $form_state['values']['SELECT_GENOME'];
     $chr = $form_state['values']['SELECT_CHR'];
-    $start = $form_state['values']['START'];
-    $end = $form_state['values']['END'];
+    //$start = $form_state['values']['START'];
+    //$end = $form_state['values']['END'];
     $ref_org = $form_state['refORG']; 
 
     $_SESSION['tripal_synview_search']['SELECT_GENOME'] = $form_state['values']['SELECT_GENOME'];
     $_SESSION['tripal_synview_search']['SELECT_CHR']    = $form_state['values']['SELECT_CHR'];
-    $_SESSION['tripal_synview_search']['START']         = $form_state['values']['START'];
-    $_SESSION['tripal_synview_search']['END']           = $form_state['values']['END'];
+    // $_SESSION['tripal_synview_search']['START']         = $form_state['values']['START'];
+    // $_SESSION['tripal_synview_search']['END']           = $form_state['values']['END'];
     $_SESSION['tripal_synview_search']['REFORG']        = $form_state['refORG'];
 
     drupal_goto("synview/search/result/1");
