@@ -1,4 +1,7 @@
 <?php
+
+dpm($jdata);
+
 //dpm($_SESSION['tripal_synview_search']);
 
 // prepare info for searching syntenic Blocks
@@ -37,37 +40,24 @@ print '<p><b>Genome(s) for comparison: </b><br>';
 print implode(', ', $ref_orgs);
 print '</p><br></div></div>';
 
-print '
-	<div class="row">
+$tab_li = ''; $tab_content = ''; $tab_li_class = ''; $tab_content_class = '';
+$tab_n = 0;
+foreach ($jdata as $d) {
+  if ($tab_n == 0) { $tab_li_class = 'class="active"'; } else { $tab_li_class = ''; }
+  if ($tab_n == 0) { $tab_content_class = 'class="tab-pane active"'; } else { $tab_content_class = 'class="tab-pane"';}
+  $tab_li .= '<li '.$tab_li_class.'> <a href="#panel-' . $d['canvas'] . '" data-toggle="tab">' . $d['name'] . '</a> </li>';
+  $tab_content .= '<div '.$tab_content_class.' id="panel-' . $d['canvas'] . '"><div id="'.$d['canvas'].'"></div></div>';
+  $tab_n++;
+}
+
+print '<div class="row">
 		<div class="col-md-12">
 			<div class="tabbable" id="tabs-syn">
-				<ul class="nav nav-tabs">
-
-					<li class="active">
-						<a href="#panel-304983" data-toggle="tab">$orgs</a>
-					</li>
-					<li>
-						<a href="#panel-352348" data-toggle="tab">Section 2</a>
-					</li>
-				</ul>
-				<div class="tab-content">
-					<div class="tab-pane active" id="panel-304983">
-						<p>x</p>
-						<div id="canvas1" style="border:0px solid #000" ></div>
-					</div>
-					<div class="tab-pane" id="panel-352348">
-						<p>y</p>
-						<div id="canvas2" style="border:0px solid #000" ></div>
-						<p>x</p>
-					</div>
-				</div>
+				<ul class="nav nav-tabs">' . $tab_li . '</ul>
+				<div class="tab-content">' . $tab_content . '</div>
 			</div>
 		</div>
-	</div>
-
-';
-
-
+	</div>';
 
 // print button for moving left and right
 print '<div class="row"> <div class="col-md-12"> <div id="canvas" style="border:0px solid #000" ></div>';
@@ -80,9 +70,6 @@ if (count($blocks) == 0) {
   ?><p>no block is found!</p><?php
 } 
 else {
-
-  dpm($blocks);
-  dpm($cluster);
 
   $rows = array();
   $headers = array('Block' , 'Organism1 (location)', 'Organism2 (location)', 'score', 'evalue');

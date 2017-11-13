@@ -27,7 +27,7 @@ var bam2x=bam2x || {};
     *
     */
     C.IdeogramModel = default_model();
-    C.IdeogramView= default_model();
+    C.IdeogramView = default_model();
     C.IdeogramView.prototype = {
        render: function(text,ticks_boolean)
            {
@@ -287,7 +287,8 @@ var bam2x=bam2x || {};
                 var self=this;
                 var targetAngles=coordinates.translateBed(this.model.target.chr,this.model.target.start,this.model.target.end);
                 var sourceAngles=coordinates.translateBed(this.model.source.chr,this.model.source.start,this.model.source.end);
-                g.append("path")
+                g.append("a").attr("xlink:href", "/synview/block/" + self.model.bid).attr("target","_blank")
+				.append("path")
                 .attr("d",
                         d3.svg.chord()
                             .source(function() { return {startAngle:sourceAngles[0],
@@ -302,28 +303,27 @@ var bam2x=bam2x || {};
                     .style("fill",  self.model.color)
                     .style("opacity", 0.5)
                     .on("mouseover", function() {
-                          d3.select(this).style("opacity",1.0);
-                          g.append("path").attr("d",d3.svg.arc().outerRadius(self.cx)
-                               .innerRadius(10)
-                               .startAngle(sourceAngles[0])
-                               .endAngle(sourceAngles[1])
-                               ).style("fill","yellow")
-                               .attr("class","flash")
-                               .style("opacity",0.3);
-                          g.append("path").attr("d",d3.svg.arc().outerRadius(self.cx)
-                                   .innerRadius(10)
-                                   .startAngle(targetAngles[0])
-                                   .endAngle(targetAngles[1])
-                                   ).style("fill","yellow")
-                               .attr("class","flash")
-                               .style("opacity",0.3);
-                    }
-                    )
-                    .on("mouseout", function() {
-                         d3.select(this).style("opacity",0.5);
-                         g.selectAll(".flash").remove();
+                          d3.select(this).style('fill','red').style("opacity",1.0);
+                          //g.append("path").attr("d",d3.svg.arc().outerRadius(self.cx)
+                          //     .innerRadius(10)
+                          //     .startAngle(sourceAngles[0])
+                          //     .endAngle(sourceAngles[1])
+                          //     ).style("fill","yellow")
+                          //     .attr("class","flash")
+                          //     .style("opacity",0.3);
+                          //g.append("path").attr("d",d3.svg.arc().outerRadius(self.cx)
+                          //         .innerRadius(10)
+                          //         .startAngle(targetAngles[0])
+                          //         .endAngle(targetAngles[1])
+                          //         ).style("fill","yellow")
+                          //     .attr("class","flash")
+                          //     .style("opacity",0.3);
                     })
-                    .append("title").text("1-index\n"+self.model.source.chr+":"+(self.model.source.start+1)+"-"+self.model.source.end+"\nto\n"+self.model.target.chr+":"+(self.model.target.start+1)+"-"+self.model.target.end+"\n"
+                    .on("mouseout", function() {
+                         d3.select(this).style("fill",self.model.color).style("opacity",0.5);
+                         //g.selectAll(".flash").remove();
+                    })
+                    .append("title").text("Block ID:"+ self.model.bid +"\n"+self.model.source.chr+":"+(self.model.source.start+1)+"-"+self.model.source.end+"\nto\n"+self.model.target.chr+":"+(self.model.target.start+1)+"-"+self.model.target.end+"\n"
                     )
             }
      };

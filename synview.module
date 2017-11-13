@@ -248,7 +248,7 @@ function synview_search_result($action) {
           $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
           $b->b1_org    = $org_opts[$b->org1];
           $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
-          $b->b1_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$loc2->srcfeature_id];
+          $b->b1_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$loc1->srcfeature_id];
           $b->b1_fmin   = $loc1->fmin;
           $b->b1_fmax   = $loc1->fmax;
           $b->b1_strand = $loc1->strand;
@@ -263,40 +263,48 @@ function synview_search_result($action) {
           $blocks[$b->blockid] = $b;
 
           // build array for json
-          //**
           if (!array_key_exists($b->org1, $jdata) ) {
             $jdata[$b->org1] = array();
             $jdata[$b->org1]['name'] = $org_opts[$b->org1];
-            $jdata[$b->org1]['chr'] = array();
+			$jdata[$b->org1]['canvas'] = 'canvas' . $b->org1;
+            $jdata[$b->org1]['ideoCollection'] = array();
+			$jdata[$b->org1]['bedCollection']  = array();
+			$jdata[$b->org1]['linkCollection'] = array(); 
+			$jdata[$b->org1]['labCollection']  = array();
           }
 
-          if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['chr']) ) {
-            $jdata[$b->org1]['chr'][$b->b1_sid] = array();
-            $jdata[$b->org1]['chr'][$b->b1_sid]['len'] = $b->b1_len;
-            $jdata[$b->org1]['chr'][$b->b1_sid]['block'] = array();
+          if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['ideoCollection']) ) {
+            $jdata[$b->org1]['ideoCollection'][$b->b1_sid] = array();
+			$jdata[$b->org1]['ideoCollection'][$b->b1_sid]['id'] = $b->b1_sid;
+            $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['length'] = $b->b1_len / 1000000;
+            $loc1->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'red';
           }
 
-          if (!array_key_exists($b->blockid, $jdata[$b->org1]['chr'][$b->b1_sid]['block'])) {
-            $jdata[$b->org1]['chr'][$b->b1_sid]['block'][$b->blockid] = array($b->b1_fmin, $b->b1_fmax);
-          }
-          //**/
-          /**
-          if (!array_key_exists($b->org2, $jdata) ) {
-            $jdata[$b->org2] = array();
-            $jdata[$b->org2]['name'] = $org_opts[$b->org2];
-            $jdata[$b->org2]['chr'] = array();  
+          if (!array_key_exists($b->b2_sid, $jdata[$b->org1]['ideoCollection']) ) {
+            $jdata[$b->org1]['ideoCollection'][$b->b2_sid] = array();
+			$jdata[$b->org1]['ideoCollection'][$b->b2_sid]['id'] = $b->b2_sid;
+            $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['length'] = $b->b2_len / 1000000;
+            $loc2->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'red';
           }
 
-          if (!array_key_exists($b->b2_sid, $jdata[$b->org2]['chr']) ) {
-            $jdata[$b->org2]['chr'][$b->b2_sid] = array();
-            $jdata[$b->org2]['chr'][$b->b2_sid]['len'] = $b->b2_len;
-            $jdata[$b->org2]['chr'][$b->b2_sid]['block'] = array();
-          }
+          if (!array_key_exists($b->blockid, $jdata[$b->org1]['bedCollection']) ) {
+            $jdata[$b->org1]['bedCollection'][] = array(
+				'chr' => $b->b1_sid,
+				'start' => $b->b1_fmin / 1000000, 
+				'end' => $b->b1_fmax / 1000000, 
+				'id' => $b->blockid, 'color' => 'green');
 
-          if (!array_key_exists($b->blockid, $jdata[$b->org2]['chr'][$b->b2_sid]['block'])) {
-            $jdata[$b->org2]['chr'][$b->b2_sid]['block'][$b->blockid] = array($b->b2_fmin, $b->b2_fmax);
+			$jdata[$b->org1]['bedCollection'][] = array(
+                'chr' => $b->b2_sid,        
+                'start' => $b->b2_fmin / 1000000, 
+                'end' => $b->b2_fmax / 1000000, 
+                'id' => $b->blockid, 'color' => 'green');
+
+			$jdata[$b->org1]['linkCollection'][] = array(
+				'bid' => $b->blockid,
+				'source' => $jdata[$b->org1]['bedCollection'][count($jdata[$b->org1]['bedCollection'])-2], 
+				'target' => $jdata[$b->org1]['bedCollection'][count($jdata[$b->org1]['bedCollection'])-1]);
           }
-          **/
       }
       // b1 is ref orgs, b2 is select org
       elseif ( array_key_exists($b->org1, $ref_org) and $b->org2 == $org_id ) 
@@ -318,40 +326,50 @@ function synview_search_result($action) {
           $b->b2_strand = $r->strand;
           $blocks[$b->blockid] = $b;
 
-          /**
+          // build array for json
           if (!array_key_exists($b->org1, $jdata) ) {
             $jdata[$b->org1] = array();
             $jdata[$b->org1]['name'] = $org_opts[$b->org1];
-            $jdata[$b->org1]['chr'] = array();
+            $jdata[$b->org1]['canvas'] = 'canvas' . $b->org1;
+            $jdata[$b->org1]['ideoCollection'] = array();
+            $jdata[$b->org1]['bedCollection']  = array();
+            $jdata[$b->org1]['linkCollection'] = array();
+            $jdata[$b->org1]['labCollection']  = array();
           }
 
-          if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['chr']) ) {
-            $jdata[$b->org1]['chr'][$b->b1_sid] = array();
-            $jdata[$b->org1]['chr'][$b->b1_sid]['len'] = $b->b1_len;
-            $jdata[$b->org1]['chr'][$b->b1_sid]['block'] = array();
+          if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['ideoCollection']) ) {
+            $jdata[$b->org1]['ideoCollection'][$b->b1_sid] = array();
+            $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['id'] = $b->b1_sid;
+            $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['length'] = $b->b1_len / 1000000;
+            $loc1->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'red';
           }
 
-          if (!array_key_exists($b->blockid, $jdata[$b->org1]['chr'][$b->b1_sid]['block'])) {
-            $jdata[$b->org1]['chr'][$b->b1_sid]['block'][$b->blockid] = array($b->b1_fmin, $b->b1_fmax);
-          }
-          **/
-          /**
-          if (!array_key_exists($b->org2, $jdata) ) {
-            $jdata[$b->org2] = array();
-            $jdata[$b->org2]['name'] = $org_opts[$b->org2];
-            $jdata[$b->org2]['chr'] = array();
+          if (!array_key_exists($b->b2_sid, $jdata[$b->org1]['ideoCollection']) ) {
+            $jdata[$b->org1]['ideoCollection'][$b->b2_sid] = array();
+            $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['id'] = $b->b2_sid;
+            $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['length'] = $b->b2_len / 1000000;
+            $loc2->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'red';
           }
 
-          if (!array_key_exists($b->b2_sid, $jdata[$b->org2]['chr']) ) {
-            $jdata[$b->org2]['chr'][$b->b2_sid] = array();
-            $jdata[$b->org2]['chr'][$b->b2_sid]['len'] = $b->b2_len;
-            $jdata[$b->org2]['chr'][$b->b2_sid]['block'] = array();
+          if (!array_key_exists($b->blockid, $jdata[$b->org1]['bedCollection']) ) {
+            $jdata[$b->org1]['bedCollection'][] = array(
+                'chr' => $b->b1_sid,
+                'start' => $b->b1_fmin / 1000000,
+                'end' => $b->b1_fmax / 1000000,
+                'id' => $b->blockid, 'color' => 'green');
+
+            $jdata[$b->org1]['bedCollection'][] = array(
+                'chr' => $b->b2_sid,
+                'start' => $b->b2_fmin / 1000000,
+                'end' => $b->b2_fmax / 1000000,
+                'id' => $b->blockid, 'color' => 'green');
+
+            $jdata[$b->org1]['linkCollection'][] = array(
+				'bid' => $b->blockid,
+                'source' => $jdata[$b->org1]['bedCollection'][count($jdata[$b->org1]['bedCollection'])-2],
+                'target' => $jdata[$b->org1]['bedCollection'][count($jdata[$b->org1]['bedCollection'])-1]);
           }
 
-          if (!array_key_exists($b->blockid, $jdata[$b->org2]['chr'][$b->b2_sid]['block'])) {
-            $jdata[$b->org2]['chr'][$b->b2_sid]['block'][$b->blockid] = array($b->b2_fmin, $b->b2_fmax);
-          }
-          **/
       }
       elseif ( array_key_exists($b->org2, $ref_org) and $b->org1 == $org_id )
       {
@@ -413,9 +431,15 @@ function synview_search_result($action) {
       }
    }
 
-  //dpm($blocks);
-  dpm($jdata);
+  $jdata_tmp = array();
+  foreach ($jdata as $id => $data) {
+    $data['ideoCollection'] = array_values($data['ideoCollection']);
+    $jdata_tmp[] = $data;
+  }
 
+  $json_data = json_encode($jdata_tmp);
+  $json_data = "var data = $json_data";
+  drupal_add_js($json_data, array('type'=>'inline', 'scope'=>'footer','weight' => 50));
 
   // find overlapped blocks and generate clusters
   // step 1 : generate pairs of blocks that overlapped
@@ -506,7 +530,7 @@ function synview_search_result($action) {
     }
   }
 
-  return theme('synview_search_result', array('cluster'=> $cluster, 'blocks' => $blocks));
+  return theme('synview_search_result', array('cluster'=> $cluster, 'blocks' => $blocks, 'jdata' => $jdata_tmp));
 }
 
 /**
