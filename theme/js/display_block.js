@@ -72,12 +72,12 @@
 
 
     // zoom and pan funcation
+	//var yrange = scale_A.range();
     var myZoom = d3.zoom()
         .scaleExtent([1, 20])   // the scale range is from 1x to 10x
-        .translateExtent([[0, 0], [wsvg, hsvg]])
+        .translateExtent([[0, 0], [wsvg, hsvg]]) // set limit of 
         .extent([[0, 0], [wsvg, hsvg]])
         .on("zoom", zoomed);
-
 	svg.call(myZoom);
 
   let subRectG = svg.append('g');
@@ -196,19 +196,23 @@
 		//**
 		var fullsize = yrange[1]-yrange[0];
 		var newsize = fullsize * d3.event.transform.k;
-		var offset = (newsize - fullsize) / 2;
-		var newrange = [yrange[0]-offset,yrange[1]+offset];
+		var offset = newsize - fullsize;
+		var ty = Math.min(0, Math.max(d3.event.transform.y, -1 * fullsize * d3.event.transform.k + fullsize));
+		var newrange = [yrange[0]+ty,yrange[1]+offset+ty];
+
+		//var offset = (newsize - fullsize)/2;
+		//var newrange = [yrange[0]-offset+d3.event.transform.y), yrange[1]+offset+d3.event.transform.y)];
+
+		//console.log(ty);
+		//console.log(d3.event.transform.y);
+		//console.log(newrange);
+		//console.log(d3.event);
+
 		scale_A.range(newrange);
 		scale_B.range(newrange);
 		scalerA.domain(newrange);
 		scalerB.domain(newrange);
 		drawFunction();
-		//**/
-		//var t = d3.event.transform;
-  		//console.log(t);
-		//var xt = t.rescaleX(x);
-		//subRectG.select(".textA").attr("d", area.x(function(d) { return xt(d.date); }));	
-		//textA.attr("transform", d3.event.transform);
 	}
 
 

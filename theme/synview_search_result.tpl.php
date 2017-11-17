@@ -1,7 +1,6 @@
 <?php
 
 dpm($jdata);
-
 //dpm($_SESSION['tripal_synview_search']);
 
 // prepare info for searching syntenic Blocks
@@ -18,11 +17,11 @@ foreach ($_SESSION['tripal_synview_search']['REFORG'] as $oid => $org_common_nam
 
 $org_info = chado_generate_var('organism', array('organism_id'=>$org_id));
 
-$ac_left  = l("<<<", "synview/search/result/left");
-$ac_right = l(">>>", "synview/search/result/right");
+//$ac_left  = l("<<<", "synview/search/result/left");
+//$ac_right = l(">>>", "synview/search/result/right");
 $reference = "$chr : $start  -  $end";
 
-print '<div class="row"> <div class="col-md-8 col-md-offset-2">';
+print '<div class="row"> <div class="col-md-12">';
 
 // print breadcrumb (go back for another search)
 $nav = array();
@@ -36,57 +35,30 @@ print $breadcrumb;
 print '<p><b>Selected genome and location: </b><br>';
 print ' -> Genome: ' . $org_info->common_name . '<br>';
 print ' -> Location: ' . $reference . '<br></p>';
-print '<p><b>Genome(s) for comparison: </b><br>';
-print implode(', ', $ref_orgs);
-print '</p><br></div></div>';
+print '<p><b>Genome(s) for comparison: </b></p>';
+print '</div></div>';
 
-$tab_li = ''; $tab_content = ''; $tab_li_class = ''; $tab_content_class = '';
+$tab_li = ''; $tab_content = ''; $tab_li_class = ''; $tab_content_class = ''; $tab_table = '';
 $tab_n = 0;
+$headers = array('Block' , 'Organism1 (location)', 'Organism2 (location)', 'score', 'evalue');
+
 foreach ($jdata as $d) {
   if ($tab_n == 0) { $tab_li_class = 'class="active"'; } else { $tab_li_class = ''; }
   if ($tab_n == 0) { $tab_content_class = 'class="tab-pane active"'; } else { $tab_content_class = 'class="tab-pane"';}
   $tab_li .= '<li '.$tab_li_class.'> <a href="#panel-' . $d['canvas'] . '" data-toggle="tab">' . $d['name'] . '</a> </li>';
-  $tab_content .= '<div '.$tab_content_class.' id="panel-' . $d['canvas'] . '"><div id="'.$d['canvas'].'"></div></div>';
-  $tab_n++;
-}
 
-print '<div class="row">
-		<div class="col-md-12">
-			<div class="tabbable" id="tabs-syn">
-				<ul class="nav nav-tabs">' . $tab_li . '</ul>
-				<div class="tab-content">' . $tab_content . '</div>
-			</div>
-		</div>
-	</div>';
-
-// print button for moving left and right
-print '<div class="row"> <div class="col-md-12"> <div id="canvas" style="border:0px solid #000" ></div>';
-print '<button type="button" class="btn btn-default"> ' . $ac_left . '</button>';
-print "  $reference  ";
-print '<button type="button" class="btn btn-default"> ' . $ac_right. '</button>';
-
-// print search result
-if (count($blocks) == 0) {
-  ?><p>no block is found!</p><?php
-} 
-else {
-
+  // generate block table
   $rows = array();
-  $headers = array('Block' , 'Organism1 (location)', 'Organism2 (location)', 'score', 'evalue');
-
   $n = 0;
   $color = '#DEEEEE';
+  foreach ($d['linkCollection'] as $link) {
+    $block_id = $link['bid'];
+    $b = $blocks[$block_id];
+    $block_id = l($block_id, "synview/block/". $block_id, array('attributes' => array('target' => "_blank")));
+    $organism1 = $b->b1_org . "<br>" . $b->b1_sid . " : ". $b->b1_fmin . " - ".$b->b1_fmax;
+    $organism2 = $b->b2_org . "<br>" . $b->b2_sid . " : ". $b->b2_fmin . " - ".$b->b2_fmax;
 
-  foreach ($cluster as $cls) {
-    $n++;
-    foreach ($cls as $bid) {
-      $b = $blocks[$bid];
-      $block_id = $b->blockid;
-      $block_id = l($block_id, "synview/block/". $block_id, array('attributes' => array('target' => "_blank")));
-      $organism1 = $b->b1_org . "<br>" . $b->b1_sid . " : ". $b->b1_fmin . " - ".$b->b1_fmax;
-      $organism2 = $b->b2_org . "<br>" . $b->b2_sid . " : ". $b->b2_fmin . " - ".$b->b2_fmax;
- 
-      if ($n % 2 == 1) {
+    if ($n % 2 == 1) {
         $rows[] = array(
           array('data'=> $block_id,  'width' => '10%', 'bgcolor' => $color),
           array('data'=> $organism1, 'width' => '20%', 'bgcolor' => $color),
@@ -94,16 +66,16 @@ else {
           array('data'=> $b->score,  'width' => '10%', 'bgcolor' => $color),
           array('data'=> $b->evalue, 'width' => '10%', 'bgcolor' => $color),
         );
-      } else {
-        $rows[] = array(  
+    } else {
+        $rows[] = array(
           array('data'=> $block_id, 'width' => '10%'),
           array('data'=> $organism1, 'width' => '20%'),
           array('data'=> $organism2, 'width' => '20%'),
           array('data'=> $b->score, 'width' => '10%'),
           array('data'=> $b->evalue, 'width' => '10%'),
         );
-      }
     }
+    $n++;
   }
 
   $table = array(
@@ -119,11 +91,28 @@ else {
     'empty' => '',
   );
 
-  print theme_table($table);
-
+  $tab_table = theme_table($table);
+  $tab_content .= '<div '.$tab_content_class.' id="panel-' . $d['canvas'] . '"><div id="'.$d['canvas'].'"></div>'.$tab_table.'</div>';
+  $tab_n++;
 }
 
-print '</div></div>';
+print '<div class="row">
+		<div class="col-md-12">
+			<div class="tabbable" id="tabs-syn">
+				<ul class="nav nav-tabs">' . $tab_li . '</ul>
+				<div class="tab-content">' . $tab_content . '</div>
+			</div>
+		</div>
+	</div>';
+
+// print button for moving left and right
+//print '<button type="button" class="btn btn-default"> ' . $ac_left . '</button>';
+//print "  $reference  ";
+//print '<button type="button" class="btn btn-default"> ' . $ac_right. '</button>';
+
+if (count($blocks) == 0) {
+  ?><p>no block is found!</p><?php
+} 
 
 ?>
 
