@@ -11,9 +11,9 @@ function drawSyn(C, data) {
 	var ide_outerRadius = geneRadius - 5;
 	var ide_innerRadius = geneRadius - 25;
 	var linkRadius = geneRadius - 27;
-	var svg = d3.select("#" + data.canvas).append("svg").attr("width",canvasSize).attr("height",canvasSize).attr("id","synimg" + data.cavas);
+	var svg = d3.select("#" + data.canvas).append("svg").attr("width",canvasSize).attr("height",canvasSize).attr("id","synimg" + data.canvas);
 
-	var ideogramTrack = new C.IdeogramTrack({"collection":data.ideoCollection,"el":svg.append("g"),"cx":center,"cy":center,"outerRadius":ide_outerRadius,"innerRadius":ide_innerRadius,"gapAngle":0.01});
+	var ideogramTrack = new C.IdeogramTrack({"sid":data.canvas,"collection":data.ideoCollection,"el":svg.append("g"),"cx":center,"cy":center,"outerRadius":ide_outerRadius,"innerRadius":ide_innerRadius,"gapAngle":0.01});
 	ideogramTrack.render(true);
 
 	//var bedTrack = new C.BedTrack({"collection":data.bedCollection,"el":svg.append("g"),"cx":center,"cy":center,'outerRadius':bed_outerRadius,'innerRadius':bed_innerRadius});

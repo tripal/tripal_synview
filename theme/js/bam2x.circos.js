@@ -29,58 +29,54 @@ var bam2x=bam2x || {};
     C.IdeogramModel = default_model();
     C.IdeogramView = default_model();
     C.IdeogramView.prototype = {
-       render: function(text,ticks_boolean)
-           {
-               var ideogram=this.el;
-               if(this.track_name){
-                    ideogram.attr("class",this.track_name);
-               }
-               if(this.model.id){
-               ideogram.attr("id",this.model.id);
-               }
-               ideogram.selectAll("path").remove();
-               var self=this;
-               ideogram.attr("transform","translate("+this.cx+","+this.cy+")");
-               ideogram.append("path").attr("d", d3.svg.arc().outerRadius(this.outerRadius)
-                       .innerRadius(this.innerRadius)
-                       .startAngle(this.startAngle)
-                       .endAngle(this.endAngle)
-                       )
-                       .attr("class","symbol")
-                       .attr("model",this.model)
-                       .attr("id","symbol-"+this.model.id)
-                       .style("fill",this.model.color)
-                       .style("opacity",0.5)
-                       .on("mouseover", function(d,i){
-                        d3.select(this).style("opacity",1.0);
-                        ideogram.append("path").attr("d",d3.svg.arc().outerRadius(self.cx)
-                       .innerRadius(10)
-                       .startAngle(self.startAngle)
-                       .endAngle(self.endAngle)
-                       )
-                       .style("fill","yellow")
-                       .attr("class","flash")
-                       .style("opacity",0.3);
-                               }
-                           
-                          )
-                       .on("mouseout",function(d,i)
-                               {
-                                d3.select(this).style("opacity",0.7);
-                                ideogram.selectAll(".flash").remove();
-                               }
-                               
-                          ).append("title").text(this.model.id);
-                       
-               if(text){
-                  var text_content = ideogram.append("svg:text")
-	                  .attr("x", 10)
-	                  .attr("dy",-20);
-	                  text_content.append("svg:textPath")
-	                  .attr("xlink:href","#symbol-"+this.model.id)
-			  .text(self.model.id);
-	       }
-               if(ticks_boolean) {
+       	render: function(text, ticks_boolean)
+		{
+			var ideogram=this.el;
+			if(this.track_name){
+				ideogram.attr("class",this.track_name);
+			}
+			if(this.model.id){
+				ideogram.attr("id",this.model.id);
+			}
+			ideogram.selectAll("path").remove();
+               
+			var self=this;
+			ideogram.attr("transform","translate("+this.cx+","+this.cy+")");
+			ideogram.append("path").attr("d", d3.svg.arc().outerRadius(this.outerRadius)
+				.innerRadius(this.innerRadius)
+				.startAngle(this.startAngle)
+				.endAngle(this.endAngle))
+			.attr("class","symbol")
+			.attr("model",this.model)
+			.attr("id","symbol-"+this.model.id+this.sid)
+			.style("fill",this.model.color)
+			.style("opacity",0.5)
+			.on("mouseover", function(d,i) {
+				d3.select(this).style("opacity",1.0);
+				//ideogram.append("path").attr("d",d3.svg.arc().outerRadius(self.cx)
+				//	.innerRadius(10)
+				//	.startAngle(self.startAngle)
+				//	.endAngle(self.endAngle)
+				//)	
+				//.style("fill","yellow")
+				//.attr("class","flash")
+				//.style("opacity",0.3);
+			})
+			.on("mouseout",function(d,i) {
+				d3.select(this).style("opacity",0.5);
+				ideogram.selectAll(".flash").remove();
+			})
+			.append("title").text(this.model.id);
+            
+			if(text){
+				var text_content = ideogram.append("text")
+					.attr("x", 10).attr("dy",-20);
+				text_content.append("textPath")
+					.attr("xlink:href","#symbol-"+this.model.id+this.sid)
+					.text(self.model.id);
+			}
+              
+			if(ticks_boolean) {
                     var el=this.el;
                     var ticks = el.append("g").selectAll("g")
                                 .data([self])
@@ -129,53 +125,49 @@ var bam2x=bam2x || {};
     
     C.IdeogramTrack = default_model();
     C.IdeogramTrack.prototype = {
-           add: function(ideogram)
-           {
-               this.collection.push(ideogram);
-           }
-           ,
+           
+		add: function(ideogram) {
+			this.collection.push(ideogram);
+		},
+           
+		render: function(ticks) {
+			var offsetAngle=0;
+			var totalLength=this.totalLength();
+			var totalGaps=this.collection.length;
+			var gapAngle=this.gapAngle; //set later
+			var totalAngle=3.1415926*2-gapAngle*totalGaps;
+			var startAngle=offsetAngle;
+			var self=this;
+			self.ideogramViews={};
 
-           render: function(ticks)
-           {
-               var offsetAngle=0;
-               var totalLength=this.totalLength();
-               var totalGaps=this.collection.length;
-               var gapAngle=this.gapAngle; //set later
-               var totalAngle=3.1415926*2-gapAngle*totalGaps;
-               var startAngle=offsetAngle;
-               var self=this;
-               self.ideogramViews={};
-               this.collection.forEach( function(i)
-                   {
-                     var endAngle=startAngle+i.length/totalLength*totalAngle;
-                     var ideogramView = new C.IdeogramView({"startAngle":startAngle,"endAngle":endAngle,"innerRadius":self.innerRadius,"outerRadius":self.outerRadius,"model":i,"el":self.el.append("g").attr("id",i.id),"cx":self.cx,"cy":self.cy})
-                     self.ideogramViews[i.id]=ideogramView;
-                     if(ticks){
-                     ideogramView.render(true,true);
-                     }
-                     else
-                     {
-                     ideogramView.render(true);
-                     }
-                     startAngle=endAngle+gapAngle;
-                   });
-           
-           },
-           
-           translateBed: function(id,start,end) //bed format [start,end) 0 index
-           {
-               return this.ideogramViews[id].translateBed(start,end);
+			console.log(this);
                
-           },
-           totalLength: function()
-          {
-                var s=0;
-                this.collection.forEach(function(i)
-                {
-                       s+=i.length;
-                  });
-             return s;
-          }
+			this.collection.forEach( function(i) {
+				var endAngle=startAngle+i.length/totalLength*totalAngle;
+				var ideogramView = new C.IdeogramView({"startAngle":startAngle,"endAngle":endAngle,"innerRadius":self.innerRadius,"outerRadius":self.outerRadius,"model":i,"el":self.el.append("g").attr("id",i.id),"cx":self.cx,"cy":self.cy, "sid": self.sid})
+				self.ideogramViews[i.id]=ideogramView;
+				if(ticks){
+					ideogramView.render(true,true);
+				} 
+				else {
+					ideogramView.render(true);
+				}
+				startAngle=endAngle+gapAngle;
+			});
+		},
+        
+		// bed format [start,end) 0 index   
+		translateBed: function(id,start,end) { 
+			return this.ideogramViews[id].translateBed(start,end);
+		},
+           
+		totalLength: function() {
+			var s=0;
+			this.collection.forEach(function(i) {
+				s+=i.length;
+			});
+			return s;
+		}
     };
 
     /**

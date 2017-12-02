@@ -97,6 +97,9 @@ if ($block_info) {
   $rows = array();
   $headers = array('Gene A' , 'Gene B', 'e-value');
 
+  $id1_num = 0;
+  $id2_num = 0;
+
   foreach ($block_info as $m) {
     $color = '';
     $id1 = $m[0];
@@ -105,10 +108,14 @@ if ($block_info) {
     $id2_table = $id2;
 
     if ($gene_position[$id1]) {
-		$rect1[$id1] = array('min'=>$gene_position[$id1][0], 'max'=> $gene_position[$id1][1]);
+		//$rect1[$id1] = array('min'=>$gene_position[$id1][0], 'max'=> $gene_position[$id1][1]);
+		$rect1[] = array($id1, $gene_position[$id1][0], $gene_position[$id1][1]);
+        $id1_num++;
     }
     if ($gene_position[$id2]) {
-		$rect2[$id2] = array('min'=>$gene_position[$id2][0], 'max'=> $gene_position[$id2][1]);
+		//$rect2[$id2] = array('min'=>$gene_position[$id2][0], 'max'=> $gene_position[$id2][1]);
+		$rect2[] = array($id2, $gene_position[$id2][0], $gene_position[$id2][1]);
+        $id2_num++;
     }
 
     if ($_SESSION['tripal_synview_search']['highlight'] == $id1 or 
@@ -132,7 +139,8 @@ if ($block_info) {
 
     // save synteny gene paris to array for js
     if ($id1 != 'NA' and $id2 != 'NA') {
-      $synteny_gene_pairs[] = array('A' => $id1, 'B' => $id2);
+      //$synteny_gene_pairs[] = array('A' => $id1, 'B' => $id2);
+	  $synteny_gene_pairs[] = array($id1_num, $id2_num);
     }
   }
 

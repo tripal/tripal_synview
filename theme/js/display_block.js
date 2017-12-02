@@ -1,6 +1,5 @@
 
-    console.log(data);
-
+    //console.log(data);
 
 	// set the svg and other parameters for drawing synteny genes
 	var svg = d3.select("#svg"),
@@ -23,12 +22,12 @@
 	var txtToChr = 5;			// distance of text to chromosome
 
 	// the related include the path for synteny links
-	let relateD = relate.map(d=>{
+	let relateD = relate.map(function(d){
         let _d = [];
-        _d.push([margin.left + chrWidth,data.A.rect[d.A].min]);
-        _d.push([margin.left + spaceBetweenChr,data.B.rect[d.B].min]);
-        _d.push([margin.left + spaceBetweenChr,data.B.rect[d.B].max]);
-        _d.push([margin.left + chrWidth,data.A.rect[d.A].max]);
+        _d.push([margin.left + chrWidth,data.A.rect[d[0]-1][1]]);
+        _d.push([margin.left + spaceBetweenChr,data.B.rect[d[1]-1][1]]);
+        _d.push([margin.left + spaceBetweenChr,data.B.rect[d[1]-1][2]]);
+        _d.push([margin.left + chrWidth,data.A.rect[d[0]-1][2]]);
         return _d;
     });
 
@@ -133,20 +132,30 @@
 		.classed('bar_a',true)
 		.merge(rect_A)							// position for genes in chrA
 		.attr('x',margin.left) 					// 100 
-		.attr('y',d=>scale_A(data_A[d].min))	// scale  
+		.attr('y',d=>scale_A(data_A[d][1]))		// scale  
 		.attr('width',chrWidth)
-		.attr('height',d=>scale_A(data_A[d].max)-scale_A(data_A[d].min));
+		.attr('height',d=>scale_A(data_A[d][2])-scale_A(data_A[d][1]));
 	rect_A.exit().remove();						// exit: select DOM not in data, then remove them
 
+	let initA = 0;
 	let textA = subRectG.selectAll('.textA')
 		.data(Object.keys(data_A));
 	textA.enter().append('text')
 		.classed('textA',true)
 		.merge(textA)							// position for txt of all genes in chrA
 		.attr('x',margin.left - txtToChr)		// 90
-		.attr('y',d=>(scale_A(data_A[d].max)+scale_A(data_A[d].min))/2)  
+		.attr('y',d=>(scale_A(data_A[d][2]) + scale_A(data_A[d][1]))/2)
 		.attr('text-anchor','end')
-		.html(d=>"<a href=/feature/gene/" + d + " target=_blank>" + d + "</a>");
+		.html(function(d){
+			if (d == 0) {
+				return "<a href=/feature/gene/" + data_A[d][0] + " target=_blank>" + data_A[d][0] + "</a>";
+			}
+			let gene_space = scale_A(data_A[d][1]) - scale_A(data_A[initA][1]);
+			if (gene_space > 14) {
+				initA = d;
+				return "<a href=/feature/gene/" + data_A[d][0] + " target=_blank>" + data_A[d][0] + "</a>";
+			}
+		});
 	textA.exit().remove();
 
 	let data_B = data.B.rect;
@@ -156,20 +165,30 @@
 		.classed('bar_b',true)
 		.merge(rect_B)								// position for genes in chrB
 		.attr('x',margin.left + spaceBetweenChr)	// 500
-		.attr('y',d=>scale_B(data_B[d].min))		// scale
+		.attr('y',d=>scale_B(data_B[d][1]))		// scale
 		.attr('width',chrWidth)
-		.attr('height',d=>scale_B(data_B[d].max)-scale_B(data_B[d].min));
+		.attr('height',d=>scale_B(data_B[d][2])-scale_B(data_B[d][1]));
 	rect_B.exit().remove();
 
+	let initB = 0;
 	let textB = subRectG.selectAll('.textB')
 		.data(Object.keys(data_B));
 	textB.enter().append('text')
 		.classed('textB',true)
 		.merge(textB)							// position for txt of all genes in chrB
 		.attr('x',margin.left + spaceBetweenChr + chrWidth + txtToChr)	
-		.attr('y',d=>(scale_B(data_B[d].max)+scale_B(data_B[d].min))/2)
+		.attr('y',d=>(scale_B(data_B[d][2])+scale_B(data_B[d][1]))/2) 
 		.attr('text-anchor','start')
-		.html(d=>"<a href=/feature/gene/" + d + " target=_blank>" + d + "</a>");
+		.html(function(d){
+			if (d == 0) {
+				return "<a href=/feature/gene/" + data_B[d][0] + " target=_blank>" + data_B[d][0] + "</a>";
+			}
+			let gene_space = scale_B(data_B[d][1]) - scale_B(data_B[initB][1]);
+			if (gene_space > 14) {
+				initB = d;
+				return "<a href=/feature/gene/" + data_B[d][0] + " target=_blank>" + data_B[d][0] + "</a>"; 
+			}
+		});
 	textB.exit().remove();
 
 	// draw path for synteny 
