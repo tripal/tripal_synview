@@ -75,10 +75,10 @@ function synview_preprocess_display_block(&$vars) {
       if (count($m) == 3) {
         $block_info[] = $m;
       }
-      if ($m[0] != 'NA') {
+      if (isset($m[0]) && $m[0] != 'NA') {
         $gene_array[] = $m[0];
       }
-      if ($m[1] != 'NA') {
+      if (isset($m[1]) && $m[1] != 'NA') {
         $gene_array[] = $m[1];
       }
     }
@@ -87,12 +87,12 @@ function synview_preprocess_display_block(&$vars) {
 
   // get the genes location 
   $gene_position = array();
-  $sql_gene_loc = 'SELECT F.name, FL.fmin, FL.fmax FROM {feature} F 
+  $sql_gene_loc = 'SELECT F.uniquename, F.name, FL.fmin, FL.fmax FROM {feature} F 
     LEFT JOIN {featureloc} FL ON F.feature_id = FL.feature_id
-    WHERE F.name IN (:genes)';
-  $result_gene_array = db_query($sql_gene_loc, array(':genes' => $gene_array));
+    WHERE F.uniquename IN (:genes)';
+  $result_gene_array = chado_query($sql_gene_loc, array(':genes' => $gene_array))->fetchAllAssoc('uniquename');
   foreach ($result_gene_array as $gene_pos) {
-    $gene_position[$gene_pos->name] = array($gene_pos->fmin, $gene_pos->fmax);
+    $gene_position[$gene_pos->uniquename] = array('name' => $gene_pos->name, 'fmin' => $gene_pos->fmin, 'fmax' => $gene_pos->fmax);
   }
   $vars['gene_position'] = $gene_position;
 }

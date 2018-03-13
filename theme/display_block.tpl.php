@@ -107,19 +107,19 @@ if ($block_info) {
     $id1_table = $id1;
     $id2_table = $id2;
 
-    if ($gene_position[$id1]) {
+    if (isset($gene_position[$id1]) && $gene_position[$id1]) {
 		//$rect1[$id1] = array('min'=>$gene_position[$id1][0], 'max'=> $gene_position[$id1][1]);
-		$rect1[] = array($id1, $gene_position[$id1][0], $gene_position[$id1][1]);
+      $rect1[] = array($gene_position[$id1]['name'], $gene_position[$id1]['fmin'], $gene_position[$id1]['fmax']);
         $id1_num++;
     }
-    if ($gene_position[$id2]) {
+    if (isset($gene_position[$id2]) && $gene_position[$id2]) {
 		//$rect2[$id2] = array('min'=>$gene_position[$id2][0], 'max'=> $gene_position[$id2][1]);
-		$rect2[] = array($id2, $gene_position[$id2][0], $gene_position[$id2][1]);
+      $rect2[] = array($gene_position[$id2]['name'], $gene_position[$id2]['fmin'], $gene_position[$id2]['fmax']);
         $id2_num++;
     }
 
-    if ($_SESSION['tripal_synview_search']['highlight'] == $id1 or 
-        $_SESSION['tripal_synview_search']['highlight'] == $id2) {
+    if (isset($_SESSION['tripal_synview_search']['highlight']) && ($_SESSION['tripal_synview_search']['highlight'] == $id1 or 
+        $_SESSION['tripal_synview_search']['highlight'] == $id2)) {
       $color = '#ffa5a5';
     }
 
