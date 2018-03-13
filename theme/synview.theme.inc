@@ -90,7 +90,7 @@ function synview_preprocess_display_block(&$vars) {
   $sql_gene_loc = 'SELECT F.uniquename, F.name, FL.fmin, FL.fmax FROM {feature} F 
     LEFT JOIN {featureloc} FL ON F.feature_id = FL.feature_id
     WHERE F.uniquename IN (:genes)';
-  $result_gene_array = chado_query($sql_gene_loc, array(':genes' => $gene_array))->fetchAllAssoc('uniquename');
+  $result_gene_array = chado_query($sql_gene_loc, array(':genes' => $gene_array));
   foreach ($result_gene_array as $gene_pos) {
     $gene_position[$gene_pos->uniquename] = array('name' => $gene_pos->name, 'fmin' => $gene_pos->fmin, 'fmax' => $gene_pos->fmax);
   }
