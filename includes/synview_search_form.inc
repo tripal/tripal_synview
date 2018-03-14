@@ -184,14 +184,14 @@ function synview_search_form_validate($form, &$form_state) {
     //}
 
     // check the end using reference length
-    if ($org_id and $chr and $end) {
+/*     if ($org_id and $chr and $end) {
       if (isset($_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr]) and 
           $end > $_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr]) {
         $end_pos = $_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr];
         $end_pos = "1 - $end_pos";
         form_set_error('END', 'The end position goes beyound the refernece ' . $end_pos);
       }
-    }
+    } */
 
     $ref_org = array();
     foreach ($form['#org_opts'] as $org_id => $org_name) {
@@ -266,14 +266,16 @@ function ajax_synview_location_callback($form, $form_state) {
   $genome_sel = $form_state['values']['SELECT_GENOME'];
 
   if ($genome_sel == 'SELECT_G') {
-    return;
+    $chr_opts = array('SELECT_C' => 'Select a chromosome/scaffold');
+    $form['LOCATION']['SELECT_CHR']['#options'] = $chr_opts;
+    return $form['LOCATION']['SELECT_CHR'];
   }
 
   $ref_name = array();
   $chr_opts = array('SELECT_C' => 'Select a chromosome/scaffold');
 
   // retrieve reference id and name from session for saving search time
-  if (isset($_SESSION['tripal_synview_search']['REF'][$genome_sel])) {
+  if (isset($_SESSION['tripal_synview_search']['REF'][$genome_sel]) && $_SESSION['tripal_synview_search']['REF'][$genome_sel]) {
     foreach ($_SESSION['tripal_synview_search']['REF'][$genome_sel] as $rid => $rname) {
       $chr_opts[$rid] = $rname;
     }

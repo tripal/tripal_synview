@@ -41,7 +41,9 @@ function get_reference ($org_opts) {
 
   foreach ($org_opts as $genome_sel => $org_name) {
     if (isset($_SESSION['tripal_synview_search']['REF'][$genome_sel]) and 
-        isset($_SESSION['tripal_synview_search']['RLEN'][$genome_sel]) ) {
+        isset($_SESSION['tripal_synview_search']['RLEN'][$genome_sel]) and
+        $_SESSION['tripal_synview_search']['REF'][$genome_sel] and
+        $_SESSION['tripal_synview_search']['RLEN'][$genome_sel]) {
       continue;
     }
     $result = chado_query($sql, array(':type_id'=>$type_id, ':organism_id'=>$genome_sel));
