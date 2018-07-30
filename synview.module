@@ -153,6 +153,12 @@ function synview_search_result($action) {
   $ref_org = $_SESSION['tripal_synview_search']['REFORG'];
   $end_pos = $_SESSION['tripal_synview_search']['RLEN'][$org_id][$chr];
 
+  # define search mode, 0 for query_org is different with hit_org; 1 for query and hit org are same 
+  $search_mode = 0; 
+  if (array_key_exists($org_id, $ref_org)) {
+    $search_mode = 1;
+  }
+
   //dpm($_SESSION['tripal_synview_search']);
 
   if ($action) {
@@ -243,7 +249,7 @@ function synview_search_result($action) {
   foreach ($res as $b) {
       // filter the reference organism
       // b1 and b2 are selected org
-      if ( $b->org1 == $org_id and $b->org2 == $org_id )
+      if ( $b->org1 == $org_id and $b->org2 == $org_id and $search_mode == 1 )
       {
           $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
           $b->b1_org    = $org_opts[$b->org1];
@@ -307,7 +313,7 @@ function synview_search_result($action) {
           }
       }
       // b1 is ref orgs, b2 is select org
-      elseif ( array_key_exists($b->org1, $ref_org) and $b->org2 == $org_id ) 
+      if ( array_key_exists($b->org1, $ref_org) and $b->org2 == $org_id ) 
       {
           $r = $search_results[$b->b2];
           $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
@@ -371,12 +377,13 @@ function synview_search_result($action) {
           }
 
       }
+      // b2 is ref orgs, b1 is select org
       elseif ( array_key_exists($b->org2, $ref_org) and $b->org1 == $org_id )
       {
           $r = $search_results[$b->b1];
           $b->b1_org    = $org_opts[$b->org1];
           $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$r->srcfeature_id];
-          $b->b1_sid    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$r->srcfeature_id];
+          $b->b1_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$r->srcfeature_id];
           $b->b1_fmin   = $r->fmin;
           $b->b1_fmax   = $r->fmax;
           $b->b1_strand = $r->strand;
@@ -391,7 +398,7 @@ function synview_search_result($action) {
           $blocks[$b->blockid] = $b;
 
           // build array for json
-          if (!array_key_exists($b->org1, $jdata) ) {
+          if (!array_key_exists($b->org2, $jdata) ) {
             $jdata[$b->org2] = array();
             $jdata[$b->org2]['name'] = $org_opts[$b->org2];
             $jdata[$b->org2]['canvas'] = 'canvas' . $b->org2;
@@ -401,37 +408,37 @@ function synview_search_result($action) {
             $jdata[$b->org2]['labCollection']  = array();
           }
 
-          if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['ideoCollection']) ) {
-            $jdata[$b->org1]['ideoCollection'][$b->b1_sid] = array();
-            $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['id'] = $b->b1_sid;
-            $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['length'] = $b->b1_len / 1000000;
-            $r->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'red';
+          if (!array_key_exists($b->b1_sid, $jdata[$b->org2]['ideoCollection']) ) {
+            $jdata[$b->org2]['ideoCollection'][$b->b1_sid] = array();
+            $jdata[$b->org2]['ideoCollection'][$b->b1_sid]['id'] = $b->b1_sid;
+            $jdata[$b->org2]['ideoCollection'][$b->b1_sid]['length'] = $b->b1_len / 1000000;
+            $r->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org2]['ideoCollection'][$b->b1_sid]['color'] = 'blue' : $jdata[$b->org2]['ideoCollection'][$b->b1_sid]['color'] = 'red';
           }
 
-          if (!array_key_exists($b->b2_sid, $jdata[$b->org1]['ideoCollection']) ) {
-            $jdata[$b->org1]['ideoCollection'][$b->b2_sid] = array();
-            $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['id'] = $b->b2_sid;
-            $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['length'] = $b->b2_len / 1000000;
-            $loc2->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'red';
+          if (!array_key_exists($b->b2_sid, $jdata[$b->org2]['ideoCollection']) ) {
+            $jdata[$b->org2]['ideoCollection'][$b->b2_sid] = array();
+            $jdata[$b->org2]['ideoCollection'][$b->b2_sid]['id'] = $b->b2_sid;
+            $jdata[$b->org2]['ideoCollection'][$b->b2_sid]['length'] = $b->b2_len / 1000000;
+            $loc2->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org2]['ideoCollection'][$b->b2_sid]['color'] = 'blue' : $jdata[$b->org2]['ideoCollection'][$b->b2_sid]['color'] = 'red';
           }
 
-          if (!array_key_exists($b->blockid, $jdata[$b->org1]['bedCollection']) ) {
-            $jdata[$b->org1]['bedCollection'][] = array(
+          if (!array_key_exists($b->blockid, $jdata[$b->org2]['bedCollection']) ) {
+            $jdata[$b->org2]['bedCollection'][] = array(
                 'chr' => $b->b1_sid,
                 'start' => $b->b1_fmin / 1000000,
                 'end' => $b->b1_fmax / 1000000,
                 'id' => $b->blockid, 'color' => 'green');
 
-            $jdata[$b->org1]['bedCollection'][] = array(
+            $jdata[$b->org2]['bedCollection'][] = array(
                 'chr' => $b->b2_sid,
                 'start' => $b->b2_fmin / 1000000,
                 'end' => $b->b2_fmax / 1000000,
                 'id' => $b->blockid, 'color' => 'green');
 
-            $jdata[$b->org1]['linkCollection'][] = array(
+            $jdata[$b->org2]['linkCollection'][] = array(
                 'bid' => $b->blockid,
-                'source' => $jdata[$b->org1]['bedCollection'][count($jdata[$b->org1]['bedCollection'])-2],
-                'target' => $jdata[$b->org1]['bedCollection'][count($jdata[$b->org1]['bedCollection'])-1]);
+                'source' => $jdata[$b->org2]['bedCollection'][count($jdata[$b->org2]['bedCollection'])-2],
+                'target' => $jdata[$b->org2]['bedCollection'][count($jdata[$b->org2]['bedCollection'])-1]);
           }
       }
       else 

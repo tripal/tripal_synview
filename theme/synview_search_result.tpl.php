@@ -1,7 +1,7 @@
 <?php
 
-dpm($jdata);
-//dpm($_SESSION['tripal_synview_search']);
+#dpm($jdata);
+#dpm($_SESSION['tripal_synview_search']);
 
 // prepare info for searching syntenic Blocks
 $org_id  = $_SESSION['tripal_synview_search']['SELECT_GENOME'];
@@ -9,6 +9,7 @@ $chr_id  = $_SESSION['tripal_synview_search']['SELECT_CHR'];
 $chr     = $_SESSION['tripal_synview_search']['REF'][$org_id][$chr_id];
 $start   = $_SESSION['tripal_synview_search']['START'];
 $end     = $_SESSION['tripal_synview_search']['END'];
+
 
 $ref_orgs = array(); 
 foreach ($_SESSION['tripal_synview_search']['REFORG'] as $oid => $org_common_name) {
@@ -19,7 +20,12 @@ $org_info = chado_generate_var('organism', array('organism_id'=>$org_id));
 
 //$ac_left  = l("<<<", "synview/search/result/left");
 //$ac_right = l(">>>", "synview/search/result/right");
-$reference = "$chr : $start  -  $end";
+
+if ($start && $end) {
+	$reference = "$chr : $start  -  $end";
+} else {
+	$reference = "$chr (full sequence)";
+}
 
 print '<div class="row"> <div class="col-md-12">';
 
