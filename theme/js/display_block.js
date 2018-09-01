@@ -1,9 +1,7 @@
 
-    //console.log(data);
-
 	// set the svg and other parameters for drawing synteny genes
 	var svg = d3.select("#svg"),
-		margin = { left:100, right:100, top:100, bottom:100},
+		margin = { left:110, right:110, top:100, bottom:100},
 		wsvg  = +svg.attr("width"),
 		hsvg  = +svg.attr("height"),
 		width = +svg.attr("width") - margin.left - margin.right,
@@ -150,7 +148,7 @@
 			if (d == 0) {
 				return "<a href=/feature/gene/" + data_A[d][0] + " target=_blank>" + data_A[d][0] + "</a>";
 			}
-			let gene_space = scale_A(data_A[d][1]) - scale_A(data_A[initA][1]);
+			let gene_space = Math.abs(scale_A(data_A[d][1]) - scale_A(data_A[initA][1]));
 			if (gene_space > 14) {
 				initA = d;
 				return "<a href=/feature/gene/" + data_A[d][0] + " target=_blank>" + data_A[d][0] + "</a>";
@@ -183,7 +181,7 @@
 			if (d == 0) {
 				return "<a href=/feature/gene/" + data_B[d][0] + " target=_blank>" + data_B[d][0] + "</a>";
 			}
-			let gene_space = scale_B(data_B[d][1]) - scale_B(data_B[initB][1]);
+			let gene_space = Math.abs(scale_B(data_B[d][1]) - scale_B(data_B[initB][1]));
 			if (gene_space > 14) {
 				initB = d;
 				return "<a href=/feature/gene/" + data_B[d][0] + " target=_blank>" + data_B[d][0] + "</a>"; 

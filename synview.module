@@ -253,7 +253,8 @@ function synview_search_result($action) {
       {
           $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
           $b->b1_org    = $org_opts[$b->org1];
-          $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
+		  $b->b1_sid	= $loc1->srcfeature_id;
+          $b->b1_chr    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
           $b->b1_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$loc1->srcfeature_id];
           $b->b1_fmin   = $loc1->fmin;
           $b->b1_fmax   = $loc1->fmax;
@@ -261,7 +262,8 @@ function synview_search_result($action) {
 
           $loc2 = chado_query($sql_loc, array(':feature_id'=>$b->b2))->fetchObject();
           $b->b2_org    = $org_opts[$b->org2];
-          $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$loc2->srcfeature_id];
+		  $b->b2_sid	= $loc2->srcfeature_id;
+          $b->b2_chr    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$loc2->srcfeature_id];
           $b->b2_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org2][$loc2->srcfeature_id];
           $b->b2_fmin   = $loc2->fmin;
           $b->b2_fmax   = $loc2->fmax;
@@ -282,6 +284,7 @@ function synview_search_result($action) {
           if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['ideoCollection']) ) {
             $jdata[$b->org1]['ideoCollection'][$b->b1_sid] = array();
 			$jdata[$b->org1]['ideoCollection'][$b->b1_sid]['id'] = $b->b1_sid;
+			$jdata[$b->org1]['ideoCollection'][$b->b1_sid]['chr'] = $b->b1_chr;
             $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['length'] = $b->b1_len / 1000000;
             $loc1->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'red';
           }
@@ -289,6 +292,7 @@ function synview_search_result($action) {
           if (!array_key_exists($b->b2_sid, $jdata[$b->org1]['ideoCollection']) ) {
             $jdata[$b->org1]['ideoCollection'][$b->b2_sid] = array();
 			$jdata[$b->org1]['ideoCollection'][$b->b2_sid]['id'] = $b->b2_sid;
+			$jdata[$b->org1]['ideoCollection'][$b->b2_sid]['chr'] = $b->b2_chr;
             $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['length'] = $b->b2_len / 1000000;
             $loc2->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'red';
           }
@@ -312,20 +316,22 @@ function synview_search_result($action) {
 				'target' => $jdata[$b->org1]['bedCollection'][count($jdata[$b->org1]['bedCollection'])-1]);
           }
       }
-      // b1 is ref orgs, b2 is select org
-      if ( array_key_exists($b->org1, $ref_org) and $b->org2 == $org_id ) 
+      // b1 is ref (hit) orgs, b2 is select (query) org
+      elseif ( array_key_exists($b->org1, $ref_org) and $b->org2 == $org_id ) 
       {
-          $r = $search_results[$b->b2];
           $loc1 = chado_query($sql_loc, array(':feature_id'=>$b->b1))->fetchObject();
           $b->b1_org    = $org_opts[$b->org1];
-          $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
+		  $b->b1_sid    = $loc1->srcfeature_id;
+          $b->b1_chr    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$loc1->srcfeature_id];
           $b->b1_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$loc1->srcfeature_id];
           $b->b1_fmin   = $loc1->fmin;
           $b->b1_fmax   = $loc1->fmax;
           $b->b1_strand = $loc1->strand;
 
+		  $r = $search_results[$b->b2];
           $b->b2_org    = $org_opts[$b->org2];
-          $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$r->srcfeature_id];
+          $b->b2_sid    = $r->srcfeature_id;
+          $b->b2_chr    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$r->srcfeature_id];
           $b->b2_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org2][$r->srcfeature_id];
           $b->b2_fmin   = $r->fmin;
           $b->b2_fmax   = $r->fmax;
@@ -346,6 +352,7 @@ function synview_search_result($action) {
           if (!array_key_exists($b->b1_sid, $jdata[$b->org1]['ideoCollection']) ) {
             $jdata[$b->org1]['ideoCollection'][$b->b1_sid] = array();
             $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['id'] = $b->b1_sid;
+			$jdata[$b->org1]['ideoCollection'][$b->b1_sid]['chr'] = $b->b1_chr;
             $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['length'] = $b->b1_len / 1000000;
             $loc1->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b1_sid]['color'] = 'red';
           }
@@ -353,6 +360,7 @@ function synview_search_result($action) {
           if (!array_key_exists($b->b2_sid, $jdata[$b->org1]['ideoCollection']) ) {
             $jdata[$b->org1]['ideoCollection'][$b->b2_sid] = array();
             $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['id'] = $b->b2_sid;
+			$jdata[$b->org1]['ideoCollection'][$b->b2_sid]['chr'] = $b->b2_chr;
             $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['length'] = $b->b2_len / 1000000;
             $r->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'blue' : $jdata[$b->org1]['ideoCollection'][$b->b2_sid]['color'] = 'red';
           }
@@ -382,7 +390,8 @@ function synview_search_result($action) {
       {
           $r = $search_results[$b->b1];
           $b->b1_org    = $org_opts[$b->org1];
-          $b->b1_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$r->srcfeature_id];
+		  $b->b1_sid	= $r->srcfeature_id;
+          $b->b1_chr    = $_SESSION['tripal_synview_search']['REF'][$b->org1][$r->srcfeature_id];
           $b->b1_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org1][$r->srcfeature_id];
           $b->b1_fmin   = $r->fmin;
           $b->b1_fmax   = $r->fmax;
@@ -390,7 +399,8 @@ function synview_search_result($action) {
 
           $loc2 = chado_query($sql_loc, array(':feature_id'=>$b->b2))->fetchObject();
           $b->b2_org    = $org_opts[$b->org2];
-          $b->b2_sid    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$loc2->srcfeature_id];
+		  $b->b2_sid	= $loc2->srcfeature_id;
+          $b->b2_chr    = $_SESSION['tripal_synview_search']['REF'][$b->org2][$loc2->srcfeature_id];
           $b->b2_len    = $_SESSION['tripal_synview_search']['RLEN'][$b->org2][$loc2->srcfeature_id];
           $b->b2_fmin   = $loc2->fmin;
           $b->b2_fmax   = $loc2->fmax;
@@ -411,6 +421,7 @@ function synview_search_result($action) {
           if (!array_key_exists($b->b1_sid, $jdata[$b->org2]['ideoCollection']) ) {
             $jdata[$b->org2]['ideoCollection'][$b->b1_sid] = array();
             $jdata[$b->org2]['ideoCollection'][$b->b1_sid]['id'] = $b->b1_sid;
+ 			$jdata[$b->org2]['ideoCollection'][$b->b1_sid]['chr'] = $b->b1_chr;
             $jdata[$b->org2]['ideoCollection'][$b->b1_sid]['length'] = $b->b1_len / 1000000;
             $r->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org2]['ideoCollection'][$b->b1_sid]['color'] = 'blue' : $jdata[$b->org2]['ideoCollection'][$b->b1_sid]['color'] = 'red';
           }
@@ -418,6 +429,7 @@ function synview_search_result($action) {
           if (!array_key_exists($b->b2_sid, $jdata[$b->org2]['ideoCollection']) ) {
             $jdata[$b->org2]['ideoCollection'][$b->b2_sid] = array();
             $jdata[$b->org2]['ideoCollection'][$b->b2_sid]['id'] = $b->b2_sid;
+			$jdata[$b->org2]['ideoCollection'][$b->b2_sid]['chr'] = $b->b2_chr;
             $jdata[$b->org2]['ideoCollection'][$b->b2_sid]['length'] = $b->b2_len / 1000000;
             $loc2->srcfeature_id == $_SESSION['tripal_synview_search']['SELECT_CHR'] ? $jdata[$b->org2]['ideoCollection'][$b->b2_sid]['color'] = 'blue' : $jdata[$b->org2]['ideoCollection'][$b->b2_sid]['color'] = 'red';
           }

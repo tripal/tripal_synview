@@ -66,14 +66,14 @@ var bam2x=bam2x || {};
 				d3.select(this).style("opacity",0.5);
 				ideogram.selectAll(".flash").remove();
 			})
-			.append("title").text(this.model.id);
-            
+			.append("title").text(this.model.chr);
+ 
 			if(text){
 				var text_content = ideogram.append("text")
 					.attr("x", 10).attr("dy",-20);
 				text_content.append("textPath")
 					.attr("xlink:href","#symbol-"+this.model.id+this.sid)
-					.text(self.model.id);
+					.text(self.model.chr); //.text(self.model.id);
 			}
               
 			if(ticks_boolean) {
@@ -140,7 +140,7 @@ var bam2x=bam2x || {};
 			var self=this;
 			self.ideogramViews={};
 
-			console.log(this);
+			//console.log(this);
                
 			this.collection.forEach( function(i) {
 				var endAngle=startAngle+i.length/totalLength*totalAngle;
@@ -202,7 +202,7 @@ var bam2x=bam2x || {};
 		.attr("transform", function(d) { return Angles[0] > Math.PI ? "rotate(180)translate(-26)" : "rotate(0)translate(10)"; })
 		.style("text-anchor", function(d) { return Angles[0] > Math.PI ? "end" : null; })
 		.attr("font-size", "0.75em")
-		.text(this.model.id);
+		.text(this.model.chr);
 
 		//console.log(Angles[0]);
 		//console.log(geneg);

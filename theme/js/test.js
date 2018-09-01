@@ -26,7 +26,7 @@ function drawSyn(C, data) {
 	//labTrack.render(ideogramTrack);
 }
 
-console.log(data);
+//console.log(data);
 
 jQuery(document).ready( function (){
 	for(var i=0; i<data.length; i++) {

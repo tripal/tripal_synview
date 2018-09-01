@@ -8,7 +8,6 @@ if ($block_info) {
   $json_data = '';
   $related = array();
 
-
   // display basic info of block 
   $rows = array();
   $headers = array();

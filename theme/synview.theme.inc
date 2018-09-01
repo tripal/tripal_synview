@@ -85,6 +85,8 @@ function synview_preprocess_display_block(&$vars) {
   }
   $vars['block_info'] = $block_info;
 
+  dpm($gene_array);
+
   // get the genes location 
   $gene_position = array();
   $sql_gene_loc = 'SELECT F.name, FL.fmin, FL.fmax FROM {feature} F 
