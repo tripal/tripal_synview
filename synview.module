@@ -300,12 +300,14 @@ function synview_search_result($action) {
           if (!array_key_exists($b->blockid, $jdata[$b->org1]['bedCollection']) ) {
             $jdata[$b->org1]['bedCollection'][] = array(
 				'chr' => $b->b1_sid,
+				'name' => $b->b1_chr,
 				'start' => $b->b1_fmin / 1000000, 
 				'end' => $b->b1_fmax / 1000000, 
 				'id' => $b->blockid, 'color' => 'green');
 
 			$jdata[$b->org1]['bedCollection'][] = array(
-                'chr' => $b->b2_sid,        
+                'chr' => $b->b2_sid,
+				'name' => $b->b2_chr,
                 'start' => $b->b2_fmin / 1000000, 
                 'end' => $b->b2_fmax / 1000000, 
                 'id' => $b->blockid, 'color' => 'green');
@@ -368,12 +370,14 @@ function synview_search_result($action) {
           if (!array_key_exists($b->blockid, $jdata[$b->org1]['bedCollection']) ) {
             $jdata[$b->org1]['bedCollection'][] = array(
                 'chr' => $b->b1_sid,
+				'name' => $b->b1_chr,
                 'start' => $b->b1_fmin / 1000000,
                 'end' => $b->b1_fmax / 1000000,
                 'id' => $b->blockid, 'color' => 'green');
 
             $jdata[$b->org1]['bedCollection'][] = array(
                 'chr' => $b->b2_sid,
+				'name' => $b->b2_chr,
                 'start' => $b->b2_fmin / 1000000,
                 'end' => $b->b2_fmax / 1000000,
                 'id' => $b->blockid, 'color' => 'green');
@@ -437,12 +441,14 @@ function synview_search_result($action) {
           if (!array_key_exists($b->blockid, $jdata[$b->org2]['bedCollection']) ) {
             $jdata[$b->org2]['bedCollection'][] = array(
                 'chr' => $b->b1_sid,
+				'name' => $b->b1_chr,
                 'start' => $b->b1_fmin / 1000000,
                 'end' => $b->b1_fmax / 1000000,
                 'id' => $b->blockid, 'color' => 'green');
 
             $jdata[$b->org2]['bedCollection'][] = array(
                 'chr' => $b->b2_sid,
+				'name' => $b->b2_chr,
                 'start' => $b->b2_fmin / 1000000,
                 'end' => $b->b2_fmax / 1000000,
                 'id' => $b->blockid, 'color' => 'green');
@@ -467,6 +473,7 @@ function synview_search_result($action) {
 
   $json_data = json_encode($jdata_tmp);
   $json_data = "var data = $json_data";
+
   drupal_add_js($json_data, array('type'=>'inline', 'scope'=>'footer','weight' => 50));
 
   $cluster = array();

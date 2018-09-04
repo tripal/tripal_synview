@@ -277,6 +277,7 @@ var bam2x=bam2x || {};
          render: function(coordinates){
                 var g=this.el.append("g");
                 var self=this;
+				console.log(self);
                 var targetAngles=coordinates.translateBed(this.model.target.chr,this.model.target.start,this.model.target.end);
                 var sourceAngles=coordinates.translateBed(this.model.source.chr,this.model.source.start,this.model.source.end);
                 g.append("a").attr("xlink:href", "/synview/block/" + self.model.bid).attr("target","_blank")
@@ -315,7 +316,7 @@ var bam2x=bam2x || {};
                          d3.select(this).style("fill",self.model.color).style("opacity",0.5);
                          //g.selectAll(".flash").remove();
                     })
-                    .append("title").text("Block ID:"+ self.model.bid +"\n"+self.model.source.chr+":"+(self.model.source.start+1)+"-"+self.model.source.end+"\nto\n"+self.model.target.chr+":"+(self.model.target.start+1)+"-"+self.model.target.end+"\n"
+                    .append("title").text("Block ID:"+ self.model.bid +"\n"+self.model.source.name+":"+Math.floor(self.model.source.start*100000)+"-"+Math.floor(self.model.source.end*1000000)+"\nto\n"+self.model.target.name+":"+Math.floor(self.model.target.start*100000)+"-"+Math.floor(self.model.target.end*1000000)+"\n"
                     )
             }
      };
