@@ -67,6 +67,8 @@ function synview_preprocess_display_block(&$vars) {
   // save block value to array
   $block_info = array();
   $gene_array = array(); 
+  $gene_array_left = array();
+  $gene_array_right = array();
  
   if ($vars['record']->value) {
     $lines = explode("\n", $vars['record']->value);
@@ -75,11 +77,13 @@ function synview_preprocess_display_block(&$vars) {
       if (count($m) == 3) {
         $block_info[] = $m;
       }
-      if (isset($m[0]) && $m[0] != 'NA') {
+      if (isset($m[0]) && $m[0] != 'NA' && $m[0] != '') {
         $gene_array[] = $m[0];
+		$gene_array_left[] = $m[0];
       }
-      if (isset($m[1]) && $m[1] != 'NA') {
+      if (isset($m[1]) && $m[1] != 'NA' && $m[1] != '') {
         $gene_array[] = $m[1];
+		$gene_array_right[] = $m[1];
       }
     }
   }
@@ -95,6 +99,25 @@ function synview_preprocess_display_block(&$vars) {
     $gene_position[$gene_pos->uniquename] = array('name' => $gene_pos->name, 'fmin' => $gene_pos->fmin, 'fmax' => $gene_pos->fmax);
   }
   $vars['gene_position'] = $gene_position;
+
+  $left_pos = array(
+		$gene_position[current($gene_array_left)]['fmin'],
+		$gene_position[current($gene_array_left)]['fmax'],
+		$gene_position[end($gene_array_left)]['fmin'],
+		$gene_position[end($gene_array_left)]['fmax']
+	);
+  $left_start = min($left_pos);
+  $left_end = max($left_pos);
+
+  $right_pos = array(
+        $gene_position[current($gene_array_right)]['fmin'],
+        $gene_position[current($gene_array_right)]['fmax'],
+        $gene_position[end($gene_array_right)]['fmin'],
+        $gene_position[end($gene_array_right)]['fmax']
+    );
+  $right_start = min($right_pos);
+  $right_end = max($right_pos);
+  $vars['block_position_fix'] = array($left_start, $left_end, $right_start, $right_end);
 }
 
 /**
@@ -111,6 +134,7 @@ function synview_theme_registry_alter(&$theme_registry) {
   $theme_registry += array_diff_key($theme_registry_copy, $theme_registry);
   // A list of templates the module will provide templates for
   $hooks = array('page');
+ck_position_fix
   foreach ($hooks as $hook) {
     // Add the key 'theme paths' if it doesn't exist in this theme's registry
     if (!isset($theme_registry[$hook]['theme paths'])) {

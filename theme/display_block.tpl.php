@@ -3,6 +3,8 @@
  * Display the syntenic block
  */
 
+//dpm($block_position_fix);
+
 if ($block_info) {
   // define json data
   $json_data = '';
@@ -39,8 +41,8 @@ if ($block_info) {
   );
 
   $locA = $b1->featureloc->feature_id->srcfeature_id->uniquename . " : " .
-    $b1->featureloc->feature_id->fmin . " - ". 
-    $b1->featureloc->feature_id->fmax;
+    $block_position_fix[0] . " - ". 
+    $block_position_fix[1];
   $rows[] = array(
     array(
       'data' => 'Location A',
@@ -63,8 +65,8 @@ if ($block_info) {
     $orgB
   );
   $locB = $b2->featureloc->feature_id->srcfeature_id->uniquename . " : " .
-    $b2->featureloc->feature_id->fmin . " - ".
-    $b2->featureloc->feature_id->fmax;
+    $block_position_fix[2] . " - ".
+    $block_position_fix[3];
   $rows[] = array(
     array(
       'data' => 'Location B',
@@ -163,14 +165,14 @@ if ($block_info) {
     'A' => array(
       //$b1->featureloc->feature_id->srcfeature_id->uniquename
       'name' => $b1->featureloc->feature_id->srcfeature_id->uniquename,
-      'min'  => $b1->featureloc->feature_id->fmin,
-      'max'  => $b1->featureloc->feature_id->fmax,
+      'min'  => $block_position_fix[0],
+      'max'  => $block_position_fix[1],
       'rect' => $rect1
     ),
     'B' => array(
       'name' => $b2->featureloc->feature_id->srcfeature_id->uniquename,
-      'min'  => $b2->featureloc->feature_id->fmin,
-      'max'  => $b2->featureloc->feature_id->fmax,
+      'min'  => $block_position_fix[2],
+      'max'  => $block_position_fix[3],
       'rect' => $rect2
     ),
   );
